@@ -3,7 +3,6 @@ __pycache__/
 .DS_Store
 output/
 state.json
-progress.json
 scraper_v2.log
 tools/forum_scraper/output/
 tools/forum_scraper/state.json
