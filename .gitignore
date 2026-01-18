@@ -10,3 +10,8 @@ tools/forum_scraper/state.json
 tools/forum_scraper/progress.json
 tools/forum_scraper/scraper_v2.log
 tools/forum_scraper_v1_baseline/output/
+
+# Logs and Data
+logs/
+data/
+config-master-coin-positon_v0.1.2/
