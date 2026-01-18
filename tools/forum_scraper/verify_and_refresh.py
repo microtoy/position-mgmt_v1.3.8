@@ -3,7 +3,7 @@ import asyncio
 from playwright.async_api import async_playwright
 
 # Configuration
-STATE_FILE = "tools/forum_scraper/state.json"
+STATE_FILE = "state.json"
 TARGET_URL = "https://bbs.quantclass.cn/thread/31814" # Use a known blocked URL
 
 async def main():

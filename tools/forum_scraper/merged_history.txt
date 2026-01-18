@@ -1,0 +1,300 @@
+downloaded_pdfs/10行python代码对接openAi 接口，实现问答_20316.pdf
+downloaded_pdfs/2024年精华帖导航汇总_47507.pdf
+downloaded_pdfs/Fama-French三因子模型于沪深300上的复现，效果出乎意料的好！_31814.pdf
+downloaded_pdfs/Mac如何自动运行Python脚本_21169.pdf
+downloaded_pdfs/Qt 可视化定时器_25807.pdf
+downloaded_pdfs/[日本蜡烛图技术2] 20种K线形态及A股数据有效性验证_32688.pdf
+downloaded_pdfs/grafana&qmt可视化大A账户_31221.pdf
+downloaded_pdfs/pycharm调试器中文乱码解决办法_23899.pdf
+downloaded_pdfs/【不幹正事】香港银行卡办理过程分享_31845.pdf
+downloaded_pdfs/【交易心得-14】弄混这两个概念将会十分麻烦_19012.pdf
+downloaded_pdfs/【交易心得-15】想卖在最高点是个妄念_19014.pdf
+downloaded_pdfs/【交易心得-16】从几笔交易说起_19018.pdf
+downloaded_pdfs/【交易心得-18】连续亏损，状态不对时怎么办_19041.pdf
+downloaded_pdfs/【交易心得-19】交易三率_19086.pdf
+downloaded_pdfs/【交易心得-20】这个问题困扰了我很久很久_19106.pdf
+downloaded_pdfs/【交易心得-24】为什么锁仓是烂操作_19196.pdf
+downloaded_pdfs/【交易心得-25】小资金靠博，大资金才求稳？_19206.pdf
+downloaded_pdfs/【交易心得-26】为什么挂单并不可取_19260.pdf
+downloaded_pdfs/【交易心得-28】交易要做专才_19310.pdf
+downloaded_pdfs/【交易心得-29】交易要尽量减少人工干预_19337.pdf
+downloaded_pdfs/【交易心得-30】“会卖的是师傅”？_19361.pdf
+downloaded_pdfs/【交易心得-31】马上要止损了，怎么救？_19392.pdf
+downloaded_pdfs/【交易心得-32】交易的取舍_19424.pdf
+downloaded_pdfs/【交易心得-34】围点打援是巨亏的重要原因_19545.pdf
+downloaded_pdfs/【交易心得-35】半目胜——读《不得贪胜》有感_19577.pdf
+downloaded_pdfs/【交易心得-36】期货的风险真的很大吗，以及我为什么从不看爆仓价_19611.pdf
+downloaded_pdfs/【交易心得-37】我是如何持仓的_19674.pdf
+downloaded_pdfs/【交易心得-38】休息，也是交易的一部分_19745.pdf
+downloaded_pdfs/【交易心得-40】知行如何真的合一_19824.pdf
+downloaded_pdfs/【交易心得-42】要严格警惕这样一类止损_19924.pdf
+downloaded_pdfs/【交易心得-43】不预测，不期待，不动心_19966.pdf
+downloaded_pdfs/【交易心得-44】交易需要天赋吗_20017.pdf
+downloaded_pdfs/【交易心得-45】【复盘】关于一笔交易的反思_20044.pdf
+downloaded_pdfs/【交易心得-46】不要撞火车_20103.pdf
+downloaded_pdfs/【交易心得系列-11】2022年最大的收获：做交易，排在第一位的到底是什么_18905.pdf
+downloaded_pdfs/【交易心得系列】分析一个死得极快的交易手法_18701.pdf
+downloaded_pdfs/【交易心得系列】固定仓位止损还是固定金额止损？_17496.pdf
+downloaded_pdfs/【交易心得系列】我是如何做到“止损像呼吸一样自然”的_18718.pdf
+downloaded_pdfs/【交易心得系列】每天问自己这么一个问题_18732.pdf
+downloaded_pdfs/【交易心得系列】请退出所有的韭菜交流群_18330.pdf
+downloaded_pdfs/【交易心得系列】错过行情怎么办_18745.pdf
+downloaded_pdfs/【底层改进】解决Windows下joblib库最多63个任务限制的过程和代码（★★☆□□□）_29979.pdf
+downloaded_pdfs/【新手上路】IPAD可以看课程啦_23083.pdf
+downloaded_pdfs/【策略分享会】2021年精华帖导航 上_7469.pdf
+downloaded_pdfs/【策略分享会】2021年精华帖导航 下_7471.pdf
+downloaded_pdfs/【策略分享会】2022年精华帖导航 数字货币篇 上_17362.pdf
+downloaded_pdfs/【策略分享会】2022年精华帖导航 数字货币篇 下_17367.pdf
+downloaded_pdfs/【策略分享会】2022年精华帖导航 股票篇_17360.pdf
+downloaded_pdfs/【策略分享会】2023年精华帖导航 数字货币篇 上_34145.pdf
+downloaded_pdfs/【策略分享会】2023年精华帖导航 综合篇_34147.pdf
+downloaded_pdfs/【策略分享会】2023年精华帖导航 股票篇 上_34143.pdf
+downloaded_pdfs/【策略分享会】2025年精华帖导航 数字货币篇 上_71031.pdf
+downloaded_pdfs/【策略分享会】2025年精华帖导航 数字货币篇 下_71032.pdf
+downloaded_pdfs/【策略分享会】2025年精华帖导航 综合篇_71033.pdf
+downloaded_pdfs/【策略分享会】2025年精华帖导航 股票篇 上_71028.pdf
+downloaded_pdfs/【策略分享会】2025年精华帖导航 股票篇 下_71030.pdf
+downloaded_pdfs/【策略分享会】精华帖导航 数字货币篇 1_47564.pdf
+downloaded_pdfs/【策略分享会】精华帖导航 数字货币篇 2_47565.pdf
+downloaded_pdfs/【策略分享会】精华帖导航 数字货币篇 3_47566.pdf
+downloaded_pdfs/【策略分享会】精华帖导航 数字货币篇 4_47567.pdf
+downloaded_pdfs/【策略分享会】精华帖导航 数字货币篇 5_47568.pdf
+downloaded_pdfs/【策略分享会】精华帖导航 股票篇 1_47557.pdf
+downloaded_pdfs/【策略分享会】精华帖导航 股票篇 2_47561.pdf
+downloaded_pdfs/【读书心得系列】《读邓普顿教你逆向投资》读书心得汇总_18660.pdf
+downloaded_pdfs/【读书心得系列】三个品质，一个洞见——读《邓普顿教你逆向投资》_18417.pdf
+downloaded_pdfs/【读书心得系列】不要浪费任何一次危机——读《读邓普顿教你逆向投资》_18523.pdf
+downloaded_pdfs/【读书心得系列】买在无人问津处，卖在人声鼎沸时——读《读邓普顿教你逆向投资》_18459.pdf
+downloaded_pdfs/【读书心得系列】刀疤——《交易心理分析》-1_18687.pdf
+downloaded_pdfs/【读书心得系列】如果你想比大众拥有更好的表现，行事就必须有异于大众——读《读邓普顿教你逆向投资》_18614.pdf
+downloaded_pdfs/【读书心得系列】如果失败的代价过于沉重，那么这件事成功的概率有多高根本无关紧要—《随机漫步的傻瓜》1_18754.pdf
+downloaded_pdfs/【读书心得系列】如果某个事真的很重要，它一定有办法让我知道——《随机漫步的傻瓜》-2_18777.pdf
+downloaded_pdfs/【读书心得系列】当最保守的人入场——读《读邓普顿教你逆向投资》_18493.pdf
+downloaded_pdfs/【读书心得系列】抛过硬币吗朋友——读《交易心理学》（1）_18670.pdf
+downloaded_pdfs/【读书心得系列】每天一个俯卧撑，一个就够了_18350.pdf
+downloaded_pdfs/【读书心得系列】赚钱最多的交易员往往是最差的交易员—《随机漫步的傻瓜》-3_18866.pdf
+downloaded_pdfs/【读书心得系列】邓普顿教你如何选基金——读《读邓普顿教你逆向投资》_18557.pdf
+downloaded_pdfs/【课程代码学习系列】小白打开和学习课程代码的姿势和建议_18653.pdf
+downloaded_pdfs/【通用篇-01】数据存储方式千万级数据增、查性能简测（MongoDBPostgreSQLSQLitePKLCSV）_30580.pdf
+downloaded_pdfs/上轮牛市的魔幻经历_873.pdf
+downloaded_pdfs/从放开烟花管制，看秩序感的回归_19008.pdf
+downloaded_pdfs/从遍历参数看并行计算时间估算_17066.pdf
+downloaded_pdfs/代码更新可否有提示_31768.pdf
+downloaded_pdfs/任务计划没被运行原因_29275.pdf
+downloaded_pdfs/使用Fama-French三因子模型计算贵州茅台(600519)2021年4月的超额收益_20331.pdf
+downloaded_pdfs/使用uptime-kuma监控服务器和交易程序是否存活_29282.pdf
+downloaded_pdfs/供求关系是胜利女神，引领我们永远上升_19079.pdf
+downloaded_pdfs/偶遇邢大，零基础小白学习量化一周年游记_16608.pdf
+downloaded_pdfs/免注册使用ChatGpt，Pycharm插件直接显示教程_20121.pdf
+downloaded_pdfs/关于论坛编辑器升级二三事_26582.pdf
+downloaded_pdfs/分享一个chat gpt 悬浮应用_21199.pdf
+downloaded_pdfs/利用 VS Code 代码片段提高编码效率_19846.pdf
+downloaded_pdfs/利用GPT4进行情感分析-基于投资交流问答_32544.pdf
+downloaded_pdfs/利用群晖NAS搭建自己的密码管理器_16724.pdf
+downloaded_pdfs/可视化定时运行py程序_新版本发布_25959.pdf
+downloaded_pdfs/大象也能起舞吗？——如何看待接下来的银行股_28675.pdf
+downloaded_pdfs/如何使用 Pandas 执行Excel电子表格的各种操作_19204.pdf
+downloaded_pdfs/如何监控国债逆回购利率，抓住春节前一波年化10%＋的机会_8186.pdf
+downloaded_pdfs/定时运行python程序工具，可视化界面完爆bat_22301.pdf
+downloaded_pdfs/布林策略的优化和实盘小结_25418.pdf
+downloaded_pdfs/干货：利用selenium爬取财经博主的微博文本并制作词云（上）_27076.pdf
+downloaded_pdfs/2022年精华帖导航 汇总_17368.pdf
+downloaded_pdfs/【TradingView教程】实操入门：教你快速学会编写Pine Script V5指标策略，从0到实盘自动交易《更新到第8篇》_22809.pdf
+downloaded_pdfs/【交易心得-17】如何解决“拿不住”_19031.pdf
+downloaded_pdfs/【交易心得-23】我为什么不做滚仓_19164.pdf
+downloaded_pdfs/【交易心得-33】交易最重要的是看准方向？_19494.pdf
+downloaded_pdfs/【交易心得-39】我最害怕的一个词_19776.pdf
+downloaded_pdfs/【研报学习】02-20180301华创证券-威廉米勒中心价值成长投资法_24954.pdf
+downloaded_pdfs/【读书心得系列】从多次小赚到一次亏掉所有—《随机漫步的傻瓜》-3_18825.pdf
+downloaded_pdfs/保姆级教程：简单易用的“宝塔面板-腾讯云专享版”使用方法介绍——对初学者非常友好的Linux服务器上跑策略方案_25658.pdf
+downloaded_pdfs/基于选股策略结果的资金曲线择时（以伽利略为例）_1650.pdf
+downloaded_pdfs/平民进阶GPT plus教程_21373.pdf
+downloaded_pdfs/开源ChatBox使用指南-开源的 ChatGPT API (OpenAI API) 桌面客户端_22272.pdf
+downloaded_pdfs/微信机器人（插件）--- 微信币圈报价机器人_17023.pdf
+downloaded_pdfs/微信机器人（进阶）---插件的使用_16967.pdf
+downloaded_pdfs/我们正处在通缩性债务危机的尾声_30106.pdf
+downloaded_pdfs/抛砖几个根据热点关键字倒查概念股的技巧_17836.pdf
+downloaded_pdfs/拉斐尔择时之ETF基金怎么选？_2913.pdf
+downloaded_pdfs/拉斐尔择时再优化_2368.pdf
+downloaded_pdfs/排序法、时间序列回归与截面回归_19862.pdf
+downloaded_pdfs/新手QMT已开通先把国债逆回购自动化_25151.pdf
+downloaded_pdfs/服务器起docker安装jupyterLab跑python_27988.pdf
+downloaded_pdfs/疫情过后，会越来越卷，如何拯救GDP？_18451.pdf
+downloaded_pdfs/百度网盘加速新破解方法_21006.pdf
+downloaded_pdfs/私有网盘在线播放课程视频+iOS播放课程视频（webm暂不支持）【豆豆瞎折腾】_23582.pdf
+downloaded_pdfs/策略自身择时之回撤择时_4219.pdf
+downloaded_pdfs/红牛看盘10---简单实用的形态，直接能用附代码。_26614.pdf
+downloaded_pdfs/红牛看盘11---《日本蜡烛图技术》之乌云盖顶形态。A股最常见的见顶组合。聊聊当前大盘。_26711.pdf
+downloaded_pdfs/红牛看盘5----筹码的秘密_26374.pdf
+downloaded_pdfs/红牛象法13----感谢神大逐贴加葫芦。放个大的---牛市的旗手到底能扛多久？！_27582.pdf
+downloaded_pdfs/红牛象法16---龙虎榜的秘密3_28104.pdf
+downloaded_pdfs/红牛象法18---他山之石2庄家的底牌_29150.pdf
+downloaded_pdfs/红牛象法19---游资余哥，薅欢乐海岸羊毛，回撤五个小目标。_29189.pdf
+downloaded_pdfs/红牛象法20---再论筹码_29365.pdf
+downloaded_pdfs/红牛象法22---比孕线还好的反孕线，从第一牛股中找到了方法。附代码_29516.pdf
+downloaded_pdfs/红牛象法23---致敬总舵主 炒股不跟解放南，便是神仙也枉然‎_29536.pdf
+downloaded_pdfs/红牛象法2_25558.pdf
+downloaded_pdfs/红牛象法3---有没有一根超级均线！有代码。_26120.pdf
+downloaded_pdfs/红牛象法6---龙虎榜背后的大佬_26416.pdf
+downloaded_pdfs/红牛象法_25409.pdf
+downloaded_pdfs/纪念入学一周年。。_21483.pdf
+downloaded_pdfs/经济增速下降，人口负增长，如何在冬天跑赢通胀？_18779.pdf
+downloaded_pdfs/群晖NAS（linux系统）每天自动下载股票数据，发送股票日报_20961.pdf
+downloaded_pdfs/自用的高频交易策略框架--也可适用中低频_16972.pdf
+downloaded_pdfs/花网7天保活，懒人半自动，5分钟缩短到1分钟完成，windows批处理方法_22536.pdf
+downloaded_pdfs/论坛升级v230117 新增自定义收藏功能_18775.pdf
+downloaded_pdfs/论，如何0成本使用OverSea的手机卡_32114.pdf
+downloaded_pdfs/逆全球化的黑暗森林_18684.pdf
+downloaded_pdfs/逆向投资中的变与不变_29219.pdf
+downloaded_pdfs/非常有用，正确使用GPT4并创造自己的GPT应用_30350.pdf
+downloaded_pdfs/飞书bot发即时消息_29065.pdf
+downloaded_pdfs/2022年精华帖导航 汇总_17368.pdf
+downloaded_pdfs/【TradingView教程】实操入门：教你快速学会编写Pine Script V5指标策略，从0到实盘自动交易《更新到第8篇》_22809.pdf
+downloaded_pdfs/【交易心得-17】如何解决“拿不住”_19031.pdf
+downloaded_pdfs/【交易心得-23】我为什么不做滚仓_19164.pdf
+downloaded_pdfs/【交易心得-33】交易最重要的是看准方向？_19494.pdf
+downloaded_pdfs/【交易心得-39】我最害怕的一个词_19776.pdf
+downloaded_pdfs/【研报学习】02-20180301华创证券-威廉米勒中心价值成长投资法_24954.pdf
+downloaded_pdfs/【读书心得系列】从多次小赚到一次亏掉所有—《随机漫步的傻瓜》-3_18825.pdf
+downloaded_pdfs/保姆级教程：简单易用的“宝塔面板-腾讯云专享版”使用方法介绍——对初学者非常友好的Linux服务器上跑策略方案_25658.pdf
+downloaded_pdfs/基于选股策略结果的资金曲线择时（以伽利略为例）_1650.pdf
+downloaded_pdfs/平民进阶GPT plus教程_21373.pdf
+downloaded_pdfs/开源ChatBox使用指南-开源的 ChatGPT API (OpenAI API) 桌面客户端_22272.pdf
+downloaded_pdfs/微信机器人（插件）--- 微信币圈报价机器人_17023.pdf
+downloaded_pdfs/微信机器人（进阶）---插件的使用_16967.pdf
+downloaded_pdfs/我们正处在通缩性债务危机的尾声_30106.pdf
+downloaded_pdfs/抛砖几个根据热点关键字倒查概念股的技巧_17836.pdf
+downloaded_pdfs/拉斐尔择时之ETF基金怎么选？_2913.pdf
+downloaded_pdfs/拉斐尔择时再优化_2368.pdf
+downloaded_pdfs/排序法、时间序列回归与截面回归_19862.pdf
+downloaded_pdfs/新手QMT已开通先把国债逆回购自动化_25151.pdf
+downloaded_pdfs/服务器起docker安装jupyterLab跑python_27988.pdf
+downloaded_pdfs/疫情过后，会越来越卷，如何拯救GDP？_18451.pdf
+downloaded_pdfs/百度网盘加速新破解方法_21006.pdf
+downloaded_pdfs/私有网盘在线播放课程视频+iOS播放课程视频（webm暂不支持）【豆豆瞎折腾】_23582.pdf
+downloaded_pdfs/策略自身择时之回撤择时_4219.pdf
+downloaded_pdfs/红牛看盘10---简单实用的形态，直接能用附代码。_26614.pdf
+downloaded_pdfs/红牛看盘11---《日本蜡烛图技术》之乌云盖顶形态。A股最常见的见顶组合。聊聊当前大盘。_26711.pdf
+downloaded_pdfs/红牛看盘5----筹码的秘密_26374.pdf
+downloaded_pdfs/红牛象法13----感谢神大逐贴加葫芦。放个大的---牛市的旗手到底能扛多久？！_27582.pdf
+downloaded_pdfs/红牛象法16---龙虎榜的秘密3_28104.pdf
+downloaded_pdfs/红牛象法18---他山之石2庄家的底牌_29150.pdf
+downloaded_pdfs/红牛象法19---游资余哥，薅欢乐海岸羊毛，回撤五个小目标。_29189.pdf
+downloaded_pdfs/红牛象法20---再论筹码_29365.pdf
+downloaded_pdfs/红牛象法22---比孕线还好的反孕线，从第一牛股中找到了方法。附代码_29516.pdf
+downloaded_pdfs/红牛象法23---致敬总舵主 炒股不跟解放南，便是神仙也枉然‎_29536.pdf
+downloaded_pdfs/红牛象法2_25558.pdf
+downloaded_pdfs/红牛象法3---有没有一根超级均线！有代码。_26120.pdf
+downloaded_pdfs/红牛象法6---龙虎榜背后的大佬_26416.pdf
+downloaded_pdfs/红牛象法_25409.pdf
+downloaded_pdfs/纪念入学一周年。。_21483.pdf
+downloaded_pdfs/经济增速下降，人口负增长，如何在冬天跑赢通胀？_18779.pdf
+downloaded_pdfs/群晖NAS（linux系统）每天自动下载股票数据，发送股票日报_20961.pdf
+downloaded_pdfs/自用的高频交易策略框架--也可适用中低频_16972.pdf
+downloaded_pdfs/花网7天保活，懒人半自动，5分钟缩短到1分钟完成，windows批处理方法_22536.pdf
+downloaded_pdfs/论坛升级v230117 新增自定义收藏功能_18775.pdf
+downloaded_pdfs/论，如何0成本使用OverSea的手机卡_32114.pdf
+downloaded_pdfs/逆全球化的黑暗森林_18684.pdf
+downloaded_pdfs/逆向投资中的变与不变_29219.pdf
+downloaded_pdfs/非常有用，正确使用GPT4并创造自己的GPT应用_30350.pdf
+downloaded_pdfs/飞书bot发即时消息_29065.pdf
+downloaded_pdfs/10-2任务_中性日志管理Grafana_Loki_30010.pdf
+downloaded_pdfs/B圈事件策略——事件策略回测框架魔改之事件遍历（二）_10388.pdf
+downloaded_pdfs/ETF全知道_31922.pdf
+downloaded_pdfs/[一起读研报]「华安」基金抛售资产时的选择性偏差_27232.pdf
+downloaded_pdfs/can only concatenate list (not int) to list原因排查代码_22496.pdf
+downloaded_pdfs/“到底是什么系列之28”RSJ高波动率择时指标（python和TB版本）_10189.pdf
+downloaded_pdfs/【grafana部署录像教程】从买服务器开始到diy面板的全程演示！_21404.pdf
+downloaded_pdfs/【一呆道法术器系列】之【术】：【回溯周期，判断周期，换仓周期】 【中性offset的非等权开仓的实盘实现】‎_13080.pdf
+downloaded_pdfs/【不幹正事】QMT策略分类净值统计_17341.pdf
+downloaded_pdfs/【任务2】费迪南成交额std+经营活动现金流入选股策略_30.88% _ -43.48% _0.71_19974.pdf
+downloaded_pdfs/【内存优化】魔改“未来N日涨跌幅”机制减少98%内存占用的过程记录_26812.pdf
+downloaded_pdfs/【天行者】基于“贝叶斯炉子”开发策略的学习笔记_37349.pdf
+downloaded_pdfs/【期货小白笔记】几款好用的期货套利新生代软件(PC端手机端)_8455.pdf
+downloaded_pdfs/【框架优化】【保温杯回测】多因子数据整理5倍加速，文件体积减少15%。适用保温杯1.7.2以上版本_36231.pdf
+downloaded_pdfs/【毅知伴解直播笔记】12-球队与硬币，动量与反转_31156.pdf
+downloaded_pdfs/【策略分享会】2022年精华帖导航 综合篇_17370.pdf
+downloaded_pdfs/【策略分享会】2023年精华帖导航 数字货币篇 下_34146.pdf
+downloaded_pdfs/【策略分享会】精华帖导航 股票篇 4_47563.pdf
+downloaded_pdfs/一个自动下载高管增减持数据到数据库的程序_2321.pdf
+downloaded_pdfs/一种针对科技类股票的选股策略_2548.pdf
+downloaded_pdfs/一行代码搞定最小下单量与价格精度_24866.pdf
+downloaded_pdfs/一键抄作业，91个费迪南子策略。_26364.pdf
+downloaded_pdfs/中性实盘实现多空两头不同选币个数（如：多2空8）_22055.pdf
+downloaded_pdfs/买入正股涨停的可转债_4001.pdf
+downloaded_pdfs/全平台通用的定时模块：每日获取股票数据可用_2385.pdf
+downloaded_pdfs/分享一个个股的分析案例_4251.pdf
+downloaded_pdfs/利用github Active 一键自动部署策略实盘程序(python)_21171.pdf
+downloaded_pdfs/可转债说人话系列之溢价率‎_7080.pdf
+downloaded_pdfs/国内商品期货交易框架_7034.pdf
+downloaded_pdfs/害怕USDT爆雷？U本位合约联合保证金攻略_4749.pdf
+downloaded_pdfs/射箭画靶：指数择时2——高抛低吸_7015.pdf
+downloaded_pdfs/巴赫策略跨市场回测及实盘应用的一些想法_15234.pdf
+downloaded_pdfs/币安U本位全量历史逐笔成交下载_14977.pdf
+downloaded_pdfs/币安子账户合约资产批量兑换BNB小工具_31636.pdf
+downloaded_pdfs/成也FTX，败也FTX，FTX130%年化资金费率套利，以及被FTX暴雷割的7WU_16840.pdf
+downloaded_pdfs/戴维斯双击改版X_2369.pdf
+downloaded_pdfs/抛砖系列：选股策略资金管理_3008.pdf
+downloaded_pdfs/挑选CTA策略参数真心烦，果断将其自动化_5396.pdf
+downloaded_pdfs/期货实盘自动化交易择时框架 -- 基于OK数字货币实盘交易择时框架更改_7187.pdf
+downloaded_pdfs/某安和OK 实盘创建子账户_18502.pdf
+downloaded_pdfs/申万行业一二级指数历史K线数据及成分股官方网站爬虫接口_2352.pdf
+downloaded_pdfs/神奇九转在B圈会有神奇的表现吗-分享回测结论与程序_17073.pdf
+downloaded_pdfs/红牛因子---MACD(增加了代码)_35615.pdf
+downloaded_pdfs/缠论笔的量化实现代码_7563.pdf
+downloaded_pdfs/网格策略爆仓计算器_10969.pdf
+downloaded_pdfs/股票策略抛砖引玉：基于北向资金数据的选股策略_80.pdf
+downloaded_pdfs/获取A股期权数据_20711.pdf
+downloaded_pdfs/超级爽-自由定制-方便快捷实时的推送bn多账户实盘盈亏与持仓信息到手机-自己使用-开袋即食_29590.pdf
+downloaded_pdfs/郑商所精英账户策略_5943.pdf
+downloaded_pdfs/阅读研报发现的一个分析师策略另一种玩法_16465.pdf
+downloaded_pdfs/10-2任务_中性日志管理Grafana_Loki_30010.pdf
+downloaded_pdfs/B圈事件策略——事件策略回测框架魔改之事件遍历（二）_10388.pdf
+downloaded_pdfs/ETF全知道_31922.pdf
+downloaded_pdfs/[一起读研报]「华安」基金抛售资产时的选择性偏差_27232.pdf
+downloaded_pdfs/can only concatenate list (not int) to list原因排查代码_22496.pdf
+downloaded_pdfs/“到底是什么系列之28”RSJ高波动率择时指标（python和TB版本）_10189.pdf
+downloaded_pdfs/【grafana部署录像教程】从买服务器开始到diy面板的全程演示！_21404.pdf
+downloaded_pdfs/【一呆道法术器系列】之【术】：【回溯周期，判断周期，换仓周期】 【中性offset的非等权开仓的实盘实现】‎_13080.pdf
+downloaded_pdfs/【不幹正事】QMT策略分类净值统计_17341.pdf
+downloaded_pdfs/【任务2】费迪南成交额std+经营活动现金流入选股策略_30.88% _ -43.48% _0.71_19974.pdf
+downloaded_pdfs/【内存优化】魔改“未来N日涨跌幅”机制减少98%内存占用的过程记录_26812.pdf
+downloaded_pdfs/【天行者】基于“贝叶斯炉子”开发策略的学习笔记_37349.pdf
+downloaded_pdfs/【期货小白笔记】几款好用的期货套利新生代软件(PC端手机端)_8455.pdf
+downloaded_pdfs/【框架优化】【保温杯回测】多因子数据整理5倍加速，文件体积减少15%。适用保温杯1.7.2以上版本_36231.pdf
+downloaded_pdfs/【毅知伴解直播笔记】12-球队与硬币，动量与反转_31156.pdf
+downloaded_pdfs/【策略分享会】2022年精华帖导航 综合篇_17370.pdf
+downloaded_pdfs/【策略分享会】2023年精华帖导航 数字货币篇 下_34146.pdf
+downloaded_pdfs/【策略分享会】精华帖导航 股票篇 4_47563.pdf
+downloaded_pdfs/一个自动下载高管增减持数据到数据库的程序_2321.pdf
+downloaded_pdfs/一种针对科技类股票的选股策略_2548.pdf
+downloaded_pdfs/一行代码搞定最小下单量与价格精度_24866.pdf
+downloaded_pdfs/一键抄作业，91个费迪南子策略。_26364.pdf
+downloaded_pdfs/中性实盘实现多空两头不同选币个数（如：多2空8）_22055.pdf
+downloaded_pdfs/买入正股涨停的可转债_4001.pdf
+downloaded_pdfs/全平台通用的定时模块：每日获取股票数据可用_2385.pdf
+downloaded_pdfs/分享一个个股的分析案例_4251.pdf
+downloaded_pdfs/利用github Active 一键自动部署策略实盘程序(python)_21171.pdf
+downloaded_pdfs/可转债说人话系列之溢价率‎_7080.pdf
+downloaded_pdfs/国内商品期货交易框架_7034.pdf
+downloaded_pdfs/害怕USDT爆雷？U本位合约联合保证金攻略_4749.pdf
+downloaded_pdfs/射箭画靶：指数择时2——高抛低吸_7015.pdf
+downloaded_pdfs/巴赫策略跨市场回测及实盘应用的一些想法_15234.pdf
+downloaded_pdfs/币安U本位全量历史逐笔成交下载_14977.pdf
+downloaded_pdfs/币安子账户合约资产批量兑换BNB小工具_31636.pdf
+downloaded_pdfs/成也FTX，败也FTX，FTX130%年化资金费率套利，以及被FTX暴雷割的7WU_16840.pdf
+downloaded_pdfs/戴维斯双击改版X_2369.pdf
+downloaded_pdfs/抛砖系列：选股策略资金管理_3008.pdf
+downloaded_pdfs/挑选CTA策略参数真心烦，果断将其自动化_5396.pdf
+downloaded_pdfs/期货实盘自动化交易择时框架 -- 基于OK数字货币实盘交易择时框架更改_7187.pdf
+downloaded_pdfs/某安和OK 实盘创建子账户_18502.pdf
+downloaded_pdfs/申万行业一二级指数历史K线数据及成分股官方网站爬虫接口_2352.pdf
+downloaded_pdfs/神奇九转在B圈会有神奇的表现吗-分享回测结论与程序_17073.pdf
+downloaded_pdfs/红牛因子---MACD(增加了代码)_35615.pdf
+downloaded_pdfs/缠论笔的量化实现代码_7563.pdf
+downloaded_pdfs/网格策略爆仓计算器_10969.pdf
+downloaded_pdfs/股票策略抛砖引玉：基于北向资金数据的选股策略_80.pdf
+downloaded_pdfs/获取A股期权数据_20711.pdf
+downloaded_pdfs/超级爽-自由定制-方便快捷实时的推送bn多账户实盘盈亏与持仓信息到手机-自己使用-开袋即食_29590.pdf
+downloaded_pdfs/郑商所精英账户策略_5943.pdf
+downloaded_pdfs/阅读研报发现的一个分析师策略另一种玩法_16465.pdf

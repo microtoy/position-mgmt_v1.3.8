@@ -19,8 +19,8 @@ OUTPUT_DIR = "downloaded_pdfs"
 STATE_FILE = "state.json"
 
 # --- Safety Settings ---
-MIN_SLEEP = 50
-MAX_SLEEP = 100
+MIN_SLEEP = 60
+MAX_SLEEP = 180
 
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
