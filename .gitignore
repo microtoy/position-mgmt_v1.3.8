@@ -12,4 +12,4 @@ tools/forum_scraper_v1_baseline/output/
 # Logs and Data
 logs/
 data/
-
+downloaded_pdfs/
