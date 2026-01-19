@@ -20,8 +20,22 @@ PROFILE_DIR = "browser_profile"
 FIXED_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 # --- Safety Settings ---
-MIN_SLEEP = 30
-MAX_SLEEP = 90
+DAILY_LIMIT = 240  # 保守上限，防止触发256封控
+NIGHT_START = 23.8   # 夜间休息开始时间
+NIGHT_END = 7      # 夜间休息结束时间
+DAILY_COUNT_FILE = "daily_count.json"  # 记录每日访问量
+
+# 时段配置：模拟人类学习节奏
+# 早间(7-12): 活跃学习，间隔短
+# 午间(12-14): 午休，暂停或极慢
+# 下午(14-18): 活跃学习
+# 晚间(18-23): 轻度学习，间隔长
+TIME_SLOTS = {
+    "morning": {"hours": range(7, 12), "min_sleep": 25, "max_sleep": 60},
+    "lunch": {"hours": range(12, 14), "min_sleep": 300, "max_sleep": 600},  # 午休，基本暂停
+    "afternoon": {"hours": range(14, 18), "min_sleep": 30, "max_sleep": 70},
+    "evening": {"hours": range(18, 23), "min_sleep": 45, "max_sleep": 100},  # 晚间放慢
+}
 
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
@@ -147,22 +161,60 @@ async def process_content():
             if url in processed_urls:
                 continue
             
-            # --- SCHEDULING LOGIC (User Request) ---
-            # 1. Night Curfew (02:00 - 06:00)
+            # --- SCHEDULING LOGIC (Human Learning Pattern) ---
             now = datetime.datetime.now()
-            if 2 <= now.hour < 6:
-                logger.warning(f"🌙 [Schedule] It is {now.strftime('%H:%M')}. Entering Night Mode (02:00-06:00).")
-                logger.warning("🌙 Sleeping until 06:00...")
-                while 2 <= datetime.datetime.now().hour < 6:
-                    await asyncio.sleep(300) # Check every 5 mins
-                logger.info("☀️ Good morning! Resuming work.")
-
-            # 2. Periodic Break (Every 30m rest 5m)
-            if time.time() - last_short_break > 1800: # 30 mins
-                logger.info(f"☕ [Schedule] Script ran for 30 mins. Taking a 5-minute break...")
+            current_hour = now.hour
+            
+            # 1. 每日限额检查
+            today_str = now.strftime("%Y-%m-%d")
+            daily_data = {}
+            if os.path.exists(DAILY_COUNT_FILE):
+                with open(DAILY_COUNT_FILE, "r") as f:
+                    daily_data = json.load(f)
+            today_count = daily_data.get(today_str, 0)
+            
+            if today_count >= DAILY_LIMIT:
+                logger.warning(f"📊 [Limit] 今日已访问 {today_count} 篇，达到上限 {DAILY_LIMIT}。")
+                logger.warning(f"📊 等待至明天 07:00 重置...")
+                # 计算到明天7点的秒数
+                tomorrow_7am = (now + datetime.timedelta(days=1)).replace(hour=7, minute=0, second=0)
+                wait_seconds = (tomorrow_7am - now).total_seconds()
+                await asyncio.sleep(wait_seconds)
+                continue
+            
+            # 2. 夜间休息 (23:00 - 07:00)
+            if current_hour >= NIGHT_START or current_hour < NIGHT_END:
+                wake_time = now.replace(hour=NIGHT_END, minute=0, second=0)
+                if current_hour >= NIGHT_START:
+                    wake_time += datetime.timedelta(days=1)
+                wait_seconds = (wake_time - now).total_seconds()
+                logger.warning(f"🌙 [睡眠] 现在是 {now.strftime('%H:%M')}，进入夜间休息模式。")
+                logger.warning(f"🌙 将于明早 {NIGHT_END}:00 自动恢复，等待 {wait_seconds/3600:.1f} 小时...")
+                save_progress(list(processed_urls), work_queue)
+                await asyncio.sleep(wait_seconds)
+                logger.info("☀️ 早安！开始新的一天。")
+                continue
+            
+            # 3. 时段感知动态间隔
+            min_sleep, max_sleep = 30, 90  # 默认值
+            current_slot = "default"
+            for slot_name, slot_config in TIME_SLOTS.items():
+                if current_hour in slot_config["hours"]:
+                    min_sleep = slot_config["min_sleep"]
+                    max_sleep = slot_config["max_sleep"]
+                    current_slot = slot_name
+                    break
+            
+            # 4. 午休时段特殊处理（12:00-14:00 基本暂停）
+            if current_slot == "lunch":
+                logger.info(f"🍽️ [午休] 现在是午餐时间 ({now.strftime('%H:%M')})，放慢节奏...")
+            
+            # 5. 每30分钟休息5分钟
+            if time.time() - last_short_break > 1800:
+                logger.info(f"☕ [休息] 连续工作30分钟，休息5分钟...")
                 await asyncio.sleep(300)
                 last_short_break = time.time()
-                logger.info("☕ Break over. Back to work.")
+                logger.info("☕ 休息结束，继续学习。")
             # ---------------------------------------
 
             logger.info(f"[{len(processed_urls)+1} / Q:{len(work_queue)}] Processing: {url}")
@@ -176,96 +228,172 @@ async def process_content():
 
                 # 2. CSS Cleanup & Table Fixes
                 await page.add_style_tag(content="""
-                    /* 1. Hide excessive UI (Conservative) */
+                    /* 1. 彻底暴力清理所有干扰元素（只隐藏按钮和遮罩，不隐藏内容） */
+                    .header, .header-container, .top-nav, .nav-bar, .breadcrumb,
                     .footer, .sidebar, .thread-catelog, .el-dialog__wrapper, 
                     .v-note-op, .article-footer-operate, .thread-status, 
-                    .myprofile-bomb-box, .el-backtop { 
+                    .myprofile-bomb-box, .el-backtop, .v-modal, .mask,
+                    [class*="skeleton"], [class*="loading"], [class*="mask"],
+                    [class*="overlay"], [class*="placeholder"], [class*="lazy"],
+                    [class*="toolbar"], [class*="action-bar"], .copy-code-btn,
+                    /* 隐藏折叠/展开按钮本身，但不隐藏其包裹的内容 */
+                    [class*="expand"] i, [class*="collapse"] i, [class*="fold"] i,
+                    .show-more, .read-more-btn { 
                         display: none !important; 
                         opacity: 0 !important;
-                        pointer-events: none !important;
+                        visibility: hidden !important;
                     }
 
-                    /* 2. Reset Layout context */
-                    #__nuxt, #__layout, .global, .w-100 {
+                    /* 强制显示可能被折叠的内容 */
+                    [class*="content-hidden"], [class*="collapsed"], .is-collapsed {
+                        display: block !important;
+                        max-height: none !important;
+                        visibility: visible !important;
+                        opacity: 1 !important;
+                    }
+
+                    /* 2. 深度重置布局流：强制所有元素回归标准文档流 */
+                    * {
                         position: static !important;
-                        overflow: visible !important;
+                        float: none !important;
+                        clear: none !important; /* 后面会针对性设置 */
+                        box-sizing: border-box !important;
+                    }
+
+                    html, body, #__nuxt, #__layout, .global, .w-100 {
+                        display: block !important;
                         height: auto !important;
+                        width: 100% !important;
+                        overflow: visible !important;
                         margin: 0 !important;
                         padding: 0 !important;
-                        min-width: 100% !important; /* Ensure full width */
-                    }
-
-                    /* 3. Article Container */
-                    .article-cont { 
-                        width: 100% !important; 
-                        margin: 0 !important; 
-                        padding: 20px !important; 
-                        max-width: none !important; 
-                        position: static !important;
                         background: white !important;
-                        z-index: 100 !important;
                     }
 
-                    body { 
-                        background: white !important; 
-                        padding-top: 0 !important;
-                        min-width: 100% !important;
-                    }
-                    
-                    div[class*="header"], div[style*="fixed"] {
-                        position: static !important;
-                    }
-
-                    /* 4. TABLE FIXES (Crucial) */
-                    table {
+                    /* 3. 文章容器：确保它是布局的稳固基座 */
+                    .article-cont { 
+                        display: block !important;
                         width: 100% !important; 
-                        max-width: 100% !important;
-                        table-layout: auto !important; /* Allow cells to expand/contract based on content */
+                        padding: 20px !important; 
+                        background: white !important;
                     }
-                    /* Force text wrapping inside cells */
-                    td, th {
-                        white-space: normal !important;
-                        word-wrap: break-word !important;
-                        overflow-wrap: break-word !important;
+
+                    /* 强制文章内部的直接子元素（如 h1, h2, p, pre, div）垂直线性排列 */
+                    .article-cont > *, .vditor-reset > * {
+                        display: block !important;
+                        clear: both !important; /* 强制换行，防止重叠 */
+                        margin-bottom: 1.2em !important;
+                        position: static !important;
+                        visibility: visible !important;
+                        opacity: 1 !important;
                     }
-                    /* If table is still somehow too wide, scale it down slightly to fit */
-                    @media print {
-                        table {
-                            page-break-inside: auto;
-                        }
-                        tr {
-                            page-break-inside: avoid;
-                            page-break-after: auto;
-                        }
-                    }
-                    /* 5. CODE BLOCK FIXES (Crucial) */
-                    pre, code, .vditor-reset pre, .vditor-reset code {
+
+                    /* 4. 代码块：针对性修复高度计算问题 */
+                    pre, code, .hljs, .vditor-reset pre, .vditor-reset code {
+                        display: block !important;
+                        width: 100% !important;
+                        height: auto !important;
+                        min-height: 1.5em !important;
+                        max-height: none !important;
+                        overflow: visible !important; /* 确保内容撑开容器高度 */
                         white-space: pre-wrap !important; 
                         word-wrap: break-word !important;
-                        overflow-x: hidden !important; /* Prevent scrollbars showing up */
-                        max-width: 100% !important;
+                        word-break: break-all !important;
+                        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
+                        font-size: 11px !important;
+                        line-height: 1.4 !important;
+                        background: #f8f8f8 !important;
+                        border: 1px solid #ddd !important;
+                        padding: 12px !important;
+                        margin: 20px 0 !important;
+                        tab-size: 4 !important;
+                    }
+
+                    /* 5. 评论区：极限压缩且保持整齐 */
+                    .comment-list, .reply-list {
+                        display: block !important;
+                        margin-top: 30px !important;
+                        border-top: 1px solid #eee !important;
+                    }
+                    .comment-item, .reply-item {
+                        display: block !important;
+                        padding: 8px 0 !important;
+                        border-bottom: 1px solid #f0f0f0 !important;
+                        clear: both !important;
+                    }
+                    .comment-item-header, .reply-item-header {
+                        display: flex !important;
+                        align-items: center !important;
+                        margin-bottom: 4px !important;
+                    }
+                    .avatar {
+                        width: 18px !important;
+                        height: 18px !important;
+                        margin-right: 8px !important;
+                        border-radius: 50% !important;
+                    }
+                    .nickname { font-size: 11px !important; font-weight: bold !important; color: #555 !important; }
+                    .time { font-size: 10px !important; color: #999 !important; margin-left: 10px !important; }
+                    .comment-item-content, .reply-item-content {
+                        font-size: 12px !important;
+                        color: #333 !important;
+                        padding-left: 26px !important;
+                        line-height: 1.5 !important;
+                    }
+
+                    /* 6. 特殊：彻底移除所有伪元素装饰，防止莫名其妙的灰色线条/块 */
+                    *::before, *::after {
+                        display: none !important;
+                        content: none !important;
+                    }
+
+                    /* 7. 打印优化 */
+                    @media print {
+                        * { -webkit-print-color-adjust: exact !important; }
                     }
                 """)
+
                 
                 # 3. Enhanced Wait Strategy (Hydration)
                 logger.info("  -> Waiting for hydration...")
                 await asyncio.sleep(10) # Base wait
                 
-                # 4. Scroll to trigger lazy loading (Crucial)
-                await page.mouse.wheel(0, 15000) 
-                await asyncio.sleep(5)
+                # 4. 循环滚动触底，确保触发所有懒加载 (Crucial for Long PDF)
+                logger.info("  -> Scrolling to trigger lazy loads...")
+                await page.evaluate("""async () => {
+                    let lastHeight = document.documentElement.scrollHeight;
+                    while (true) {
+                        window.scrollBy(0, 1500);
+                        await new Promise(r => setTimeout(r, 800));
+                        let newHeight = document.documentElement.scrollHeight;
+                        if (newHeight === lastHeight) {
+                            // 再次尝试滚动一段距离，确认是否真的到底
+                            window.scrollBy(0, 1000);
+                            await new Promise(r => setTimeout(r, 1200));
+                            if (document.documentElement.scrollHeight === newHeight) break;
+                        }
+                        lastHeight = newHeight;
+                        if (lastHeight > 50000) break; // 安全阈值，防止无限滚动
+                    }
+                }""")
+                await asyncio.sleep(2)
                 
-                # 5. Extract Title
+                # 5. 回到顶部提取标题
+                await page.evaluate("window.scrollTo(0, 0)")
                 title = await get_clean_title(page)
                 
                 # --- AUTO-STOP PROTECTION (User Request) ---
                 if "主题详情页" in title:
-                    logger.critical(f"🛑 [CRITICAL] Anti-bot detected (Title='{title}'). Stopping IMMEDIATELY to protect account.")
-                    logger.critical(f"🛑 Please run verify_and_refresh.py to solve CAPTCHA.")
+                    # Save a debug screenshot before waiting
+                    debug_screenshot_path = f"error_antibot_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                    await page.screenshot(path=debug_screenshot_path, full_page=True)
+                    logger.warning(f"⚠️ [Anti-bot] Detected (Title='{title}'). Screenshot saved: {debug_screenshot_path}")
+                    logger.warning(f"⚠️ [Anti-bot] Waiting 10 minutes before retrying...")
                     # Re-queue current item to ensure it gets retry later
                     work_queue.insert(0, (url, is_index_hint))
                     save_progress(list(processed_urls), work_queue)
-                    sys.exit(1) # Force exit
+                    await asyncio.sleep(600)  # Wait 10 minutes
+                    continue  # Then continue with queue
                 # -------------------------------------------
 
                 safe_title = re.sub(r'[\\/*?:"<>|]', "", title).strip()
@@ -304,25 +432,40 @@ async def process_content():
                     await asyncio.sleep(30)
                     continue
 
-                # 7. Print to PDF (The method USER liked)
-                logger.info(f"  -> Printing PDF: {pdf_filename}")
+                # 7. 滚动回顶部再打印 PDF（避免顶部内容被截断）
+                await page.evaluate("window.scrollTo(0, 0)")
+                await asyncio.sleep(1)
+                
+                # 8. 获取页面总高度以实现“无分页”长图 PDF
+                height = await page.evaluate("() => document.documentElement.scrollHeight")
+                # 增加一点缓冲高度
+                pdf_height = height + 50
+                
+                # 9. Print to PDF (Long Page, No Pagination)
+                logger.info(f"  -> Printing Long PDF ({height}px): {pdf_filename}")
                 await page.pdf(
                     path=filepath,
-                    format="A4",
+                    width="1200px",  # 固定宽度，模拟网页
+                    height=f"{pdf_height}px",
                     print_background=True,
-                    margin={"top": "20px", "bottom": "20px", "left": "20px", "right": "20px"}
+                    margin={"top": "0px", "bottom": "0px", "left": "0px", "right": "0px"}
                 )
                 
                 logger.info(f"  -> Success!")
                 processed_urls.add(url)
                 consecutive_failures = 0
 
-                # 8. Save Progress (EVERY TIME for safety)
+                # 10. Save Progress (EVERY TIME for safety)
                 save_progress(list(processed_urls), work_queue)
                 
-                # 9. SAFETY SLEEP
-                sleep_time = random.randint(MIN_SLEEP, MAX_SLEEP)
-                logger.info(f"  -> [Safety] Sleeping for {sleep_time} s...")
+                # 11. 更新每日计数器
+                daily_data[today_str] = daily_data.get(today_str, 0) + 1
+                with open(DAILY_COUNT_FILE, "w") as f:
+                    json.dump(daily_data, f)
+                
+                # 10. 时段感知动态间隔
+                sleep_time = random.randint(min_sleep, max_sleep)
+                logger.info(f"  -> [Safety] 时段:{current_slot} 休息 {sleep_time} 秒...")
                 await asyncio.sleep(sleep_time)
 
             except Exception as e:
@@ -331,9 +474,10 @@ async def process_content():
                 work_queue.append((url, is_index_hint))
                 await asyncio.sleep(30)
 
-        await browser.close()
+        await context.close()
     
     save_progress(list(processed_urls), work_queue)
+    logger.info("🎉 队列已清空或达到上限，爬虫任务完成。")
 
 if __name__ == "__main__":
     asyncio.run(process_content())
