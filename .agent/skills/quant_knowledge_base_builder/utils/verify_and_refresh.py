@@ -1,12 +1,10 @@
 
 import asyncio
-import os
 from playwright.async_api import async_playwright
 
 # Configuration
 PROFILE_DIR = "browser_profile"
-TARGET_URL = "https://bbs.quantclass.cn/thread/31814" 
-FIXED_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+TARGET_URL = "https://bbs.quantclass.cn/thread/31814" # Use a known blocked URL
 
 async def main():
     print("="*60)
@@ -15,15 +13,12 @@ async def main():
     print(f"1. 正在启动持久化浏览器 (Profile: {PROFILE_DIR})...")
     
     async with async_playwright() as p:
-        # Use absolute path
-        abs_profile_path = os.path.abspath(PROFILE_DIR)
-        
         # Launch persistent context
         context = await p.chromium.launch_persistent_context(
-            user_data_dir=abs_profile_path,
+            user_data_dir=PROFILE_DIR,
             headless=False, # MUST be visible for login/captcha
             args=["--start-maximized", "--disable-blink-features=AutomationControlled"],
-            user_agent=FIXED_UA,
+            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             viewport=None,
             no_viewport=True
         )

@@ -13,3 +13,5 @@ tools/forum_scraper_v1_baseline/output/
 logs/
 data/
 downloaded_pdfs/
+browser_profile/
+

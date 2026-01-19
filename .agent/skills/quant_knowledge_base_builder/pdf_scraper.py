@@ -7,7 +7,7 @@ import random
 import time
 import re
 from playwright.async_api import async_playwright
-from util_stealth import apply_stealth, random_sleep, human_scroll, get_random_ua
+from util_stealth import apply_stealth, random_sleep, human_scroll, get_random_ua, human_mouse_jitter, human_random_click
 
 # --- Configuration ---
 with open("config.json", "r", encoding="utf-8") as f:
@@ -16,11 +16,12 @@ with open("config.json", "r", encoding="utf-8") as f:
 LINKS_FILE = "links.json"
 PROGRESS_FILE = "progress.json"
 OUTPUT_DIR = "downloaded_pdfs" 
-STATE_FILE = "state.json"
+PROFILE_DIR = "browser_profile"
+FIXED_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 # --- Safety Settings ---
 MIN_SLEEP = 60
-MAX_SLEEP = 150
+MAX_SLEEP = 180
 
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
@@ -117,19 +118,20 @@ async def process_content():
     last_short_break = time.time() # Timer for 30m breaks
     
     async with async_playwright() as p:
-        # STRATEGY: Exact replica of 'test_pdf_gen.py' which USER confirmed works perfectly.
-        # This requires HEADLESS=TRUE despite potential detection, because test_pdf_gen succeeded with it.
-        logger.info("Initializing PDF Scraper (Protocol: test_pdf_gen replica)...")
+        # STRATEGY: Persistent Browser Profile for maximum durability and realistic fingerprint.
+        logger.info(f"Initializing PDF Scraper (Mode: Persistent Context, Profile: {PROFILE_DIR})...")
         
-        browser = await p.chromium.launch(headless=True) 
-        context = await browser.new_context(
-            storage_state=STATE_FILE if os.path.exists(STATE_FILE) else None,
-            user_agent=get_random_ua(),
-            # Increase viewport width to ensure tables fit!
-            viewport={"width": 1600, "height": 1200}
+        context = await p.chromium.launch_persistent_context(
+            user_data_dir=PROFILE_DIR,
+            headless=True, 
+            user_agent=FIXED_UA,
+            # Align with verify_and_refresh.py
+            viewport=None,
+            no_viewport=True,
+            args=["--start-maximized", "--disable-blink-features=AutomationControlled"]
         )
         
-        page = await context.new_page()
+        page = context.pages[0] if context.pages else await context.new_page()
         await apply_stealth(page)
 
         logger.info(f"Starting crawl with {len(work_queue)} items in queue...")
@@ -225,32 +227,43 @@ async def process_content():
                         word-wrap: break-word !important;
                         overflow-wrap: break-word !important;
                     }
-                    /* If table is still somehow too wide, scale it down slightly to fit */
+                    /* 4. TABLE & PAGE BREAK FIXES */
                     @media print {
-                        table {
-                            page-break-inside: auto;
+                        * { -webkit-print-color-adjust: exact !important; }
+                        table { page-break-inside: auto; }
+                        tr { page-break-inside: avoid; page-break-after: auto; }
+                        /* Force hide heavy UI elements that cause blank space */
+                        .header, .footer, .navbar, .side-bar, .comment-list, .reward-section,
+                        .post-actions, .breadcrumb, #header, #footer, .bottom-actions,
+                        .sidebar, .ad-section, .related-threads {
+                            display: none !important;
+                            height: 0 !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
                         }
-                        tr {
-                            page-break-inside: avoid;
-                            page-break-after: auto;
+                        /* Reset containers to prevent layout orphan space */
+                        body, .main-content, .container, .page-content {
+                            padding: 0 !important;
+                            margin: 0 !important;
+                            width: 100% !important;
                         }
                     }
                     /* 5. CODE BLOCK FIXES (Crucial) */
                     pre, code, .vditor-reset pre, .vditor-reset code {
                         white-space: pre-wrap !important; 
                         word-wrap: break-word !important;
-                        overflow-x: hidden !important; /* Prevent scrollbars showing up */
+                        overflow-x: hidden !important;
                         max-width: 100% !important;
                     }
                 """)
                 
-                # 3. Enhanced Wait Strategy (Hydration)
-                logger.info("  -> Waiting for hydration...")
-                await asyncio.sleep(10) # Base wait
-                
-                # 4. Scroll to trigger lazy loading (Crucial)
-                await page.mouse.wheel(0, 15000) 
+                # 3. Enhanced Wait Strategy & Human Emulation (Variable Scroll)
+                logger.info("  -> Waiting for hydration & simulating human behavior...")
                 await asyncio.sleep(5)
+                
+                # Use the new advanced human scroll which includes jitters and pauses
+                await human_scroll(page)
+                await asyncio.sleep(3)
                 
                 # 5. Extract Title
                 title = await get_clean_title(page)
@@ -273,18 +286,57 @@ async def process_content():
                 pdf_filename = f"{safe_title}_{thread_id}.pdf"
                 filepath = os.path.join(OUTPUT_DIR, pdf_filename)
                 
-                # 6. Content Check (to avoid blank PDFs)
-                has_content = await page.evaluate("""() => {
-                    const el = document.querySelector('.article-cont') || document.querySelector('.vditor-reset');
-                    return el && el.innerText.length > 50;
+                # 6. Content Integrity Check (Avoid blank or hidden content)
+                check_result = await page.evaluate("""() => {
+                    const article = document.querySelector('.article-cont') || document.querySelector('.vditor-reset') || document.querySelector('.thread-cont');
+                    const text = article ? article.innerText : "";
+                    const is_logged_in = document.body.innerText.includes('退出');
+                    
+                    const has_hidden_kw = text.includes("剩余内容已隐藏") || text.includes("报名课程即可查看完整内容");
+                    
+                    // STRATEGY: 
+                    // 1. If we see the "Logout" button, we are logged in. 
+                    //    Even if keywords exist (could be old boilerplate), we ignore them IF content is long enough.
+                    // 2. If NOT logged in and see keywords, then it's a real block.
+                    
+                    if (has_hidden_kw && !is_logged_in) {
+                        return { status: "HIDDEN", trigger: text.substring(0, 100) };
+                    }
+                    
+                    if (!article) return { status: "NO_ARTICLE" };
+                    if (article.innerText.trim().length < 50) return { status: "TOO_SHORT" };
+                    
+                    return { status: "OK" };
                 }""")
-                if not has_content:
-                    logger.warning("  -> Content seems empty (Anti-bot?). Skipping.")
-                    consecutive_failures += 1
-                    work_queue.append((url, is_index_hint))
-                    await asyncio.sleep(30)
-                    continue
 
+                content_status = check_result.get("status")
+                if content_status != "OK":
+                    if content_status == "HIDDEN":
+                        logger.error(f"  -> [BLOCK] Real HIDDEN detected (Not Logged In). Trigger: {check_result.get('trigger')}...")
+                        logger.error(f"  -> Please run verify_and_refresh.py to re-login.")
+                        # Save and exit
+                        work_queue.insert(0, (url, is_index_hint))
+                        save_progress(list(processed_urls), work_queue)
+                        sys.exit(1)
+                    else:
+                        logger.warning(f"  -> [Empty] Content seems invalid ({content_status}). Retrying once after extra wait...")
+                        await asyncio.sleep(5)
+                        # One more check, simpler
+                        is_ok = await page.evaluate("() => (document.querySelector('.article-cont') || document.body).innerText.length > 500")
+                        if not is_ok:
+                             consecutive_failures += 1
+                             continue
+
+                # 7. Final Polish: Hide anything still sticking out
+                await page.evaluate("""() => {
+                    const hideSelectors = [
+                        '.header', '.footer', '.sidebar', '.navbar', '.post-side', 
+                        '.post-info-bottom', '.reward-box', '.qr-code', '.author-info'
+                    ];
+                    hideSelectors.forEach(s => {
+                        document.querySelectorAll(s).forEach(el => el.style.display = 'none');
+                    });
+                }""")
                 # 7. Print to PDF (The method USER liked)
                 logger.info(f"  -> Printing PDF: {pdf_filename}")
                 await page.pdf(

@@ -16,11 +16,12 @@ with open("config.json", "r", encoding="utf-8") as f:
 LINKS_FILE = "links.json"
 PROGRESS_FILE = "progress.json"
 OUTPUT_DIR = "downloaded_pdfs" 
-STATE_FILE = "state.json"
+PROFILE_DIR = "browser_profile"
+FIXED_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 # --- Safety Settings ---
-MIN_SLEEP = 60
-MAX_SLEEP = 180
+MIN_SLEEP = 30
+MAX_SLEEP = 90
 
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
@@ -117,19 +118,21 @@ async def process_content():
     last_short_break = time.time() # Timer for 30m breaks
     
     async with async_playwright() as p:
-        # STRATEGY: Exact replica of 'test_pdf_gen.py' which USER confirmed works perfectly.
-        # This requires HEADLESS=TRUE despite potential detection, because test_pdf_gen succeeded with it.
-        logger.info("Initializing PDF Scraper (Protocol: test_pdf_gen replica)...")
+        # STRATEGY: Persistent Browser Profile for maximum durability and realistic fingerprint.
+        logger.info(f"Initializing PDF Scraper (Mode: Persistent Context, Profile: {PROFILE_DIR})...")
         
-        browser = await p.chromium.launch(headless=True) 
-        context = await browser.new_context(
-            storage_state=STATE_FILE if os.path.exists(STATE_FILE) else None,
-            user_agent=get_random_ua(),
+        # Use absolute path for PROFILE_DIR to ensure consistency across CWDs
+        abs_profile_path = os.path.abspath(PROFILE_DIR)
+        
+        context = await p.chromium.launch_persistent_context(
+            user_data_dir=abs_profile_path,
+            headless=True,
+            user_agent=FIXED_UA,
             # Increase viewport width to ensure tables fit!
             viewport={"width": 1600, "height": 1200}
         )
         
-        page = await context.new_page()
+        page = context.pages[0] if context.pages else await context.new_page()
         await apply_stealth(page)
 
         logger.info(f"Starting crawl with {len(work_queue)} items in queue...")
@@ -273,13 +276,29 @@ async def process_content():
                 pdf_filename = f"{safe_title}_{thread_id}.pdf"
                 filepath = os.path.join(OUTPUT_DIR, pdf_filename)
                 
-                # 6. Content Check (to avoid blank PDFs)
-                has_content = await page.evaluate("""() => {
-                    const el = document.querySelector('.article-cont') || document.querySelector('.vditor-reset');
-                    return el && el.innerText.length > 50;
+                # 6. Content Check (to avoid blank PDFs & skip VIP posts)
+                check_result = await page.evaluate("""() => {
+                    const article = document.querySelector('.article-cont') || document.querySelector('.vditor-reset') || document.querySelector('.thread-cont');
+                    const text = article ? article.innerText : "";
+                    
+                    if (text.includes("剩余内容已隐藏") || text.includes("报名课程即可查看完整内容")) {
+                        return { status: "HIDDEN" };
+                    }
+                    if (!article || article.innerText.trim().length < 50) {
+                        return { status: "EMPTY" };
+                    }
+                    return { status: "OK" };
                 }""")
-                if not has_content:
-                    logger.warning("  -> Content seems empty (Anti-bot?). Skipping.")
+                
+                content_status = check_result.get("status")
+                if content_status == "HIDDEN":
+                    logger.warning(f"  -> [SKIP] VIP/权限帖，跳过此帖。")
+                    processed_urls.add(url)
+                    save_progress(list(processed_urls), work_queue)
+                    await random_sleep(5, 10)
+                    continue
+                elif content_status != "OK":
+                    logger.warning("  -> Content seems empty. Skipping.")
                     consecutive_failures += 1
                     work_queue.append((url, is_index_hint))
                     await asyncio.sleep(30)
