@@ -1,7 +1,0 @@
-{
-    "base_url": "https://bbs.quantclass.cn/",
-    "topic_pattern": "/thread/",
-    "output_dir": "output",
-    "state_file": "state.json",
-    "links_file": "links.json"
-}

@@ -18,7 +18,7 @@ from core.utils.path_kit import get_folder_path
 # ** 回测配置 **
 # ====================================================================================================
 # region 回测策略细节配置
-start_date = '2021-04-02'  # 回测开始时间
+start_date = '2021-01-01'  # 回测开始时间
 end_date = '2025-12-31'  # 回测结束时间
 
 # ====================================================================================================
@@ -29,7 +29,7 @@ end_date = '2025-12-31'  # 回测结束时间
 # 现货和合约1小时预处理数据（pkl格式）：https://www.quantclass.cn/data/coin/coin-binance-spot-swap-preprocess-pkl-1h
 pre_data_path = r'/Users/microtoy/Documents/QuantWin/data/coin-binance-spot-swap-preprocess-pkl-1h'
 min_kline_num = 168  # 最少上市多久，不满该K线根数的币剔除，即剔除刚刚上市的新币。168：标识168个小时，即：7*24
-reserved_cache = ['select']  # 用于缓存控制：['select']表示只缓存选币结果，不缓存其他数据，['all']表示缓存所有数据。
+reserved_cache = ('select',)  # 用于缓存控制：['select']表示只缓存选币结果，不缓存其他数据，['all']表示缓存所有数据。
 # 目前支持选项：
 # - select: 选币结果pkl
 # - strategy: 大杂烩中策略选币pkl
@@ -42,140 +42,156 @@ reserved_cache = ['select']  # 用于缓存控制：['select']表示只缓存选
 # 案例策略，需要自己探索，不保证可用
 # ====================================================================================================
 backtest_name = '26年基础策略'  # 回测的策略组合的名称。可以自己任意取。一般建议，一个回测组，就是实盘中的一个账户。
-
 strategy_config = {
     'name': 'FixedRatioStrategy',  # *必填。使用什么策略，这里是轮动策略
     'hold_period': '1H',  # *必填。聚合后策略持仓周期。目前回测支持日线级别、小时级别。例：1H，6H，3D，7D......
     'params': {
         'cap_ratios': [
-            0.25,
-            0.25,
-            0.5,
-            0,
-            0,
-            0,
-        ],
-    },
+            0.25, 0.25, 0.5, 0., 0, 0,
+        ]
+    }
 }
-
-# 全部策略混合
 strategy_pool = [
-    # 1.策略组合
     dict(
         name='单币',
         strategy_list=[
             {
                 "strategy": "Strategy_单币",
-                "offset_list": list(range(0, 1, 1)),
-                "hold_period": "1H",
+                "offset_list": range(0, 1, 1),
+                "hold_period": '1H',
                 "market": "spot_spot",
-                "cap_weight": 1,
-                "long_cap_weight": 1,
-                "short_cap_weight": 0,
-                "long_select_coin_num": 1,
-                "factor_list": [('OnlySymbol', False, 'ZEC-USDT', 1)],
-                "use_custom_func": False,
+                'cap_weight': 1,
+                'long_cap_weight': 1,
+                'short_cap_weight': 0,
+                'long_select_coin_num': 1,
+                'short_select_coin_num': 0,
+                "factor_list": [
+                    ('OnlySymbol', False, 'ZEC-USDT', 1),
+                ],
+                "use_custom_func": False
             },
         ],
     ),
-    # 2.策略组合
     dict(
         name='多头全市场',
         strategy_list=[
             {
                 "strategy": "Strategy_多头全市场",
-                "offset_list": list(range(0, 1, 1)),
-                "hold_period": "1H",
+                "offset_list": range(0, 1, 1),
+                "hold_period": '1H',
                 "market": "mix_swap",
-                "cap_weight": 1,
-                "long_cap_weight": 1,
-                "short_cap_weight": 0,
-                "long_select_coin_num": 999,
-                "factor_list": [('LowPrice', False, 1, 1)],
-                "use_custom_func": False,
+                'cap_weight': 1,
+                'long_cap_weight': 1,
+                'short_cap_weight': 0,
+                'long_select_coin_num': 999,
+                'short_select_coin_num': 0,
+                "factor_list": [
+                    ('LowPrice', False, 1, 1),
+                ],
+                "use_custom_func": False
             },
         ],
     ),
-    # 3.策略组合
     dict(
         name='空头',
         strategy_list=[
             {
                 "strategy": "Strategy_空头",
-                "offset_list": list(range(0, 24, 1)),
-                "hold_period": "24H",
+                "offset_list": range(0, 24, 1),
+                "hold_period": '24H',
                 "market": "swap_swap",
-                "cap_weight": 1,
-                "long_cap_weight": 0,
-                "short_cap_weight": 1,
-                "short_select_coin_num": 0.1,
-                "filter_list": [('PctChange', 360, 'pct:<0.5')],
-                "factor_list": [('LowPrice', True, 360, 1)],
-                "use_custom_func": False,
+                'cap_weight': 1,
+                'long_cap_weight': 0,
+                'short_cap_weight': 1,
+                'long_select_coin_num': 0,
+                'short_select_coin_num': 0.1,
+                "factor_list": [
+                    ('LowPrice', True, 360, 1),
+                ],
+                "filter_list": [
+                    ('PctChange', 360, 'pct:<0.5'),
+                ],
+                "use_custom_func": False
             },
         ],
     ),
-    # 4.策略组合
     dict(
         name='中性',
         strategy_list=[
             {
                 "strategy": "Strategy_中性",
-                "offset_list": list(range(0, 24, 1)),
-                "hold_period": "24H",
+                "offset_list": range(0, 24, 1),
+                "hold_period": '24H',
                 "market": "swap_swap",
-                "cap_weight": 1,
-                "long_cap_weight": 0.5,
-                "short_cap_weight": 0.5,
-                "long_select_coin_num": 0.1,
-                "short_select_coin_num": 0.1,
-                "long_filter_list": [('PctChange', 360, 'pct:<0.5')],
-                "short_filter_list": [('Bias', 360, 'pct:<0.5')],
-                "long_factor_list": [('LowPrice', True, 360, 1)],
-                "short_factor_list": [('LowPrice', True, 360, 1)],
-                "use_custom_func": False,
+                'cap_weight': 1,
+                'long_cap_weight': 0.5,
+                'short_cap_weight': 0.5,
+                'long_select_coin_num': 0.1,
+                'short_select_coin_num': 0.1,
+                "long_factor_list": [
+                    ('LowPrice', True, 360, 1),
+                ],
+                "long_filter_list": [
+                    ('PctChange', 360, 'pct:<0.5'),
+                ],
+                "short_factor_list": [
+                    ('LowPrice', True, 360, 1),
+                ],
+                "short_filter_list": [
+                    ('Bias', 360, 'pct:<0.5'),
+                ],
+                "use_custom_func": False
             },
         ],
     ),
-    # 5.策略组合
     dict(
         name='横截面',
         strategy_list=[
             {
                 "strategy": "Strategy_横截面",
-                "offset_list": list(range(0, 24, 1)),
-                "hold_period": "24H",
+                "offset_list": range(0, 24, 1),
+                "hold_period": '24H',
                 "market": "mix_swap",
-                "cap_weight": 1,
-                "long_cap_weight": 1,
-                "short_cap_weight": 0,
-                "long_select_coin_num": 0.1,
-                "factor_list": [('BiasRankDiff', True, 360, 1)],
-                "use_custom_func": False,
+                'cap_weight': 1,
+                'long_cap_weight': 1,
+                'short_cap_weight': 0,
+                'long_select_coin_num': 0.1,
+                'short_select_coin_num': 0,
+                "factor_list": [
+                    ('BiasRankDiff', True, 360, 1),
+                ],
+                "use_custom_func": False
             },
         ],
     ),
-    # 6.策略组合
     dict(
         name='后置过滤',
         strategy_list=[
             {
                 "strategy": "Strategy_后置过滤",
-                "offset_list": list(range(0, 24, 1)),
-                "hold_period": "24H",
+                "offset_list": range(0, 24, 1),
+                "hold_period": '24H',
                 "market": "swap_swap",
-                "cap_weight": 1,
-                "long_cap_weight": 0,
-                "short_cap_weight": 1,
-                "short_select_coin_num": 0.1,
-                "filter_list": [('PctChange', 360, 'pct:<0.5')],
-                "factor_list": [('LowPrice', True, 360, 1)],
-                "filter_list_post": [('LowPrice', 360, 'val:>=50')],
-                "use_custom_func": False,
+                'cap_weight': 1,
+                'long_cap_weight': 0,
+                'short_cap_weight': 1,
+                'long_select_coin_num': 0,
+                'short_select_coin_num': 0.1,
+                "factor_list": [
+                    ('LowPrice', True, 360, 1),
+                ],
+                "filter_list": [
+                    ('PctChange', 360, 'pct:<0.5'),
+                ],
+                "filter_list_post": [
+                    ('LowPrice', 360, 'val:>=50'),
+                ],
+                "use_custom_func": False
             },
         ],
     ),
 ]
+
 
 leverage = 1  # 杠杆数。我看哪个赌狗要把这里改成大于1的。高杠杆如梦幻泡影。不要想着一夜暴富，脚踏实地赚自己该赚的钱。
 black_list = ['DOGE-USDT']  # 拉黑名单，永远不会交易。不喜欢的币、异常的币。例：LUNA-USDT, 这里与实盘不太一样，需要有'-'
@@ -189,10 +205,10 @@ white_list = []  # 如果不为空，即只交易这些币，只在这些币当�
 simulator_config = dict(
     # 模拟下单回测设置
     account_type='普通账户',  # '统一账户'或者'普通账户'
-    initial_usdt=100000,  # 初始资金
+    initial_usdt=1_00000,  # 初始资金
     margin_rate=0.05,  # 维持保证金率，净值低于这个比例会爆仓
-    swap_c_rate=0.0005,  # 合约手续费(包含滑点)
-    spot_c_rate=0.001,  # 现货手续费(包含滑点)
+    swap_c_rate=5 / 10000,  # 合约手续费(包含滑点)
+    spot_c_rate=1 / 1000,  # 现货手续费(包含滑点)
     swap_min_order_limit=5,  # 合约最小下单量。最小不能低于5
     spot_min_order_limit=10,  # 现货最小下单量。最小不能低于10
     avg_price_col='avg_price_1m',  # 用于模拟计算的平均价，预处理数据使用的是1m，'avg_price_1m'表示1分钟的均价, 'avg_price_5m'表示5分钟的均价。
@@ -208,14 +224,14 @@ simulator_config = dict(
 # ====================================================================================================
 data_source_dict = {
     # 数据源的标签,需要与因子文件中的 extra_data_dict 中的 key 保持一致
-    "coin-cap": ('load_coin_cap', '/Users/microtoy/Documents/QuantWin/data/coin-cap'),
+
 }
 
 # ====================================================================================================
 # ** 全局设置及自动化 **
 # 这些设置是客观事实，基本不会影响到回测的细节，正常不用去改动
 # ====================================================================================================
-job_num = 5  # 回测并行数量
+job_num = max(os.cpu_count() // 2, 1)  # 回测并行数量
 # job_num = 2  # 回测并行数量
 
 # ==== factor_col_limit 介绍 ====
@@ -238,7 +254,8 @@ backtest_path = Path(get_folder_path('data', '仓位管理回测结果'))
 backtest_iter_path = Path(get_folder_path('data', '子策略回测结果'))
 
 # 稳定币信息，不参与交易的币种
-stable_symbol = ['BKRW', 'USDC', 'USDP', 'TUSD', 'BUSD', 'FDUSD', 'DAI', 'EUR', 'GBP', 'USBP', 'SUSD', 'PAXG', 'AEUR', 'EURI']
+stable_symbol = ['BKRW', 'USDC', 'USDP', 'TUSD', 'BUSD', 'FDUSD', 'DAI', 'EUR', 'GBP', 'USBP', 'SUSD', 'PAXG', 'AEUR',
+                 'EURI']
 
 if spot_path.exists() is False or swap_path.exists() is False:
     print('⚠️ 请先准确配置预处理数据的位置（pre_data_path）。建议直接复制绝对路径，并且粘贴给 pre_data_path')
