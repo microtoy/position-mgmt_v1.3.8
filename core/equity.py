@@ -268,16 +268,23 @@ def read_lot_sizes(path, symbols):
 
 def align_pivot_dimensions(market_pivot_dict, symbols, candle_begin_times):
     """
-    对不同维度的数据进行对齐
-    :param market_pivot_dict: 原始数据，是一个dict哦
-    :param symbols: 币种（列）
-    :param candle_begin_times: 时间（行）
-    :return:
+    对不同维度的数据进行对齐 (V2 优化: 如果索引已对齐，则只切片列)
     """
-    return {k: df.loc[candle_begin_times, symbols] for k, df in market_pivot_dict.items()}
+    res = {}
+    for k, df in market_pivot_dict.items():
+        # 检查索引是否完全一致 (时间范围预对齐的情况下，这里会非常快)
+        if len(df) == len(candle_begin_times) and (df.index == candle_begin_times).all():
+            # 检查列是否存在，如果存在则直接切片，否则用 reindex
+            if set(symbols).issubset(df.columns):
+                res[k] = df[symbols]
+            else:
+                res[k] = df.reindex(columns=symbols, fill_value=0)
+        else:
+            res[k] = df.loc[candle_begin_times, symbols]
+    return res
 
 
-@nb.jit(nopython=True, boundscheck=True)
+@nb.jit(nopython=True, nogil=True, boundscheck=True)
 def start_simulation(init_capital, leverages, spot_lot_sizes, swap_lot_sizes, spot_c_rate, swap_c_rate,
                      spot_min_order_limit, swap_min_order_limit, min_margin_rate, spot_ratio, swap_ratio,
                      spot_open_p, spot_close_p, spot_vwap1m_p, swap_open_p, swap_close_p, swap_vwap1m_p,
