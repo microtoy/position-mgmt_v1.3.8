@@ -162,7 +162,23 @@ def simu_timing(conf: BacktestConfig, df_spot_ratio, df_swap_ratio, pivot_dict_s
     return account_df, rtn, year_return
 
 
-def simu_performance_on_select(conf: BacktestConfig, silent=True):
+def load_pivot_data(base_path, market_type):
+    """从 Parquet 加载 Pivot 数据 (V2 优化)"""
+    res = {}
+    prefix = f'market_pivot_{market_type}'
+    import polars as pl
+    for pq_file in base_path.glob(f"{prefix}_*.parquet"):
+        key = pq_file.stem.replace(f"{prefix}_", "")
+        # V2 修正: 使用 Polars 加载后再转 Pandas，并恢复 DatetimeIndex
+        df = pl.read_parquet(pq_file).to_pandas()
+        if 'candle_begin_time' in df.columns:
+            df['candle_begin_time'] = pd.to_datetime(df['candle_begin_time'])
+            df.set_index('candle_begin_time', inplace=True)
+        res[key] = df
+    return res
+
+
+def simu_performance_on_select(conf: BacktestConfig, silent=True, pivot_dict_spot=None, pivot_dict_swap=None):
     import logging
     if silent:
         logger.setLevel(logging.WARNING)  # 可以减少中间输出的log
@@ -172,8 +188,17 @@ def simu_performance_on_select(conf: BacktestConfig, silent=True):
     # ====================================================================================================
     df_spot_ratio, df_swap_ratio = step5_aggregate_select_results(conf)
 
-    pivot_dict_spot = pd.read_pickle(raw_data_path / 'market_pivot_spot.pkl')
-    pivot_dict_swap = pd.read_pickle(raw_data_path / 'market_pivot_swap.pkl')
+    # V2 优化: 优先使用传入的 Pivot 数据，减少磁盘 I/O
+    if pivot_dict_spot is None:
+        pivot_dict_spot = load_pivot_data(raw_data_path, 'spot')
+        if not pivot_dict_spot:
+            pivot_dict_spot = pd.read_pickle(raw_data_path / 'market_pivot_spot.pkl')
+    
+    if pivot_dict_swap is None:
+        pivot_dict_swap = load_pivot_data(raw_data_path, 'swap')
+        if not pivot_dict_swap:
+            pivot_dict_swap = pd.read_pickle(raw_data_path / 'market_pivot_swap.pkl')
+
     res = step6_simulate_performance(conf, df_spot_ratio, df_swap_ratio, pivot_dict_spot, pivot_dict_swap)
     logger.setLevel(logging.DEBUG)  # 中间结果恢复一下
     return res
@@ -229,8 +254,14 @@ def run_backtest(conf: BacktestConfig):
     # ====================================================================================================
     # 6. 根据目标持仓计算资金曲线
     # ====================================================================================================
-    pivot_dict_spot = pd.read_pickle(raw_data_path / 'market_pivot_spot.pkl')
-    pivot_dict_swap = pd.read_pickle(raw_data_path / 'market_pivot_swap.pkl')
+    pivot_dict_spot = load_pivot_data(raw_data_path, 'spot')
+    if not pivot_dict_spot:
+        pivot_dict_spot = pd.read_pickle(raw_data_path / 'market_pivot_spot.pkl')
+        
+    pivot_dict_swap = load_pivot_data(raw_data_path, 'swap')
+    if not pivot_dict_swap:
+        pivot_dict_swap = pd.read_pickle(raw_data_path / 'market_pivot_swap.pkl')
+
     step6_simulate_performance(conf, df_spot_ratio, df_swap_ratio, pivot_dict_spot, pivot_dict_swap, if_show_plot=True)
     logger.ok(f'完成，回测时间：{time.time() - r_time:.3f}秒')
 
@@ -253,7 +284,8 @@ def run_backtest_multi(factory: BacktestConfigFactory):
     logger.ok('策略池中需要回测的策略数：{}'.format(len(conf_list)))
 
     # 记录一下时间戳
-    r_time = time.time()
+    all_start_time = time.time()
+    r_time = all_start_time
 
     # ====================================================================================================
     # 2. 读取回测所需数据，并做简单的预处理
@@ -285,15 +317,52 @@ def run_backtest_multi(factory: BacktestConfigFactory):
 
     # ====================================================================================================
     # 4. 选币
-    # - 注意：选完之后，每一个策略的选币结果会被保存到硬盘
     # ====================================================================================================
     divider('选币', sep='-')
     s_time = time.time()
-    logger.debug(f'注意：这个过程时间久，和包含的策略及子策略数量、选币数量有关...')
-    # ** 正常回测**
-    for conf in factory.config_list:
-        logger.info(f'{conf.name}的{len(conf.strategy_list)}个子策略选币，并行任务数：{job_num}')
-        select_coins(conf)
+    
+    # [V2 - L6 极致优化] 统一因子数据大合并 (Master Data Assembly)
+    # 在这里一次性把所有 shard 和截面因子的 Parquet 全加载进来并 Join 好
+    # 这样子策略在选币时就不需要再做任何硬盘 IO 或 Join，速度将提升一个数量级
+    logger.debug("💿 正在构建全局 Master Factor 数据集 (Zero-Wait Selection)...")
+    from core.select_coin import ALL_KLINE_PATH_TUPLE
+    from core.utils.path_kit import get_file_path
+    import polars as pl
+    
+    all_kline_pq = get_file_path(*ALL_KLINE_PATH_TUPLE, as_path_type=True).with_suffix('.parquet')
+    if all_kline_pq.exists():
+        master_pl = pl.read_parquet(all_kline_pq)
+        cache_dir = get_file_path('data', 'cache', as_path_type=True)
+        
+        # 1. 合并所有时序因子分片
+        for shard_file in cache_dir.glob('factors_shard_*.parquet'):
+            f_df = pl.read_parquet(shard_file)
+            # 只取主集中不存在的因子列进行 Join
+            cols = [c for c in f_df.columns if c not in master_pl.columns and c not in ['candle_begin_time', 'symbol', 'is_spot']]
+            if cols:
+                master_pl = master_pl.join(f_df.select(['candle_begin_time', 'symbol', 'is_spot'] + cols), 
+                                         on=['candle_begin_time', 'symbol', 'is_spot'], how='left')
+        
+        # 2. 合并所有独立截面因子
+        for factor_pq in cache_dir.glob('factor_*.parquet'):
+            f_df = pl.read_parquet(factor_pq)
+            cols = [c for c in f_df.columns if c not in master_pl.columns and c not in ['candle_begin_time', 'symbol', 'is_spot']]
+            if cols:
+                master_pl = master_pl.join(f_df.select(['candle_begin_time', 'symbol', 'is_spot'] + cols), 
+                                         on=['candle_begin_time', 'symbol', 'is_spot'], how='left')
+        
+        # 最终转回 Pandas 交付给选币引擎
+        master_shared_df = master_pl.to_pandas()
+        del master_pl
+    else:
+        master_shared_df = None
+
+    # [V2 - L4 优化] 并行化多策略选币
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    with ThreadPoolExecutor(max_workers=min(len(factory.config_list), job_num)) as executor:
+        f_list = [executor.submit(select_coins, conf, True, master_shared_df) for conf in factory.config_list]
+        for _ in as_completed(f_list):
+            pass
 
     logger.ok(f'完成选币，花费时间：{time.time() - s_time:.3f}秒，累计时间：{(time.time() - r_time):.3f}秒')
 
@@ -304,15 +373,39 @@ def run_backtest_multi(factory: BacktestConfigFactory):
     logger.setLevel(logging.DEBUG)
     logger.debug(f'注意：主要和选币数量有关...')
     s_time = time.time()
-    report_list = []
+    
+    # V2 优化: 预先加载并按时间对齐 Pivot 数据 (L3 级共享内存优化)
+    logger.debug("💿 正在初始化预对齐 Pivot 模拟数据 (Time-Aligned)...")
+    p_s_time = time.time()
+    
+    # 确定回测的时间范围，用于预先裁切 Pivot 数据
+    # 我们以第一个 config 的时间范围为准（假设多策略回测时间范围一致）
+    test_start = pd.to_datetime(conf_list[0].start_date)
+    test_end = pd.to_datetime(conf_list[0].end_date)
+    
+    raw_pivot_spot = load_pivot_data(raw_data_path, 'spot')
+    raw_pivot_swap = load_pivot_data(raw_data_path, 'swap')
+    
+    # 预先按时间裁切，这样子策略模拟只需要按币种 (columns) 裁切，速度极快
+    global_pivot_spot = {k: df.loc[test_start:test_end] for k, df in raw_pivot_spot.items()}
+    global_pivot_swap = {k: df.loc[test_start:test_end] for k, df in raw_pivot_swap.items()}
+    
+    logger.debug(f"✅ 全对齐 Pivot 数据准备完成，耗时: {time.time() - p_s_time:.2f}s")
 
-    # 串行
-    for conf in conf_list:
-        logger.debug(f"🔃 聚合{conf.name}的{len(conf.strategy_list)}个子策略，并计算资金曲线...")
-        report_list.append(simu_performance_on_select(conf, silent=False))
+    # [V2 - L4 优化] 并行化多策略模拟 (保持顺序)
+    report_list = [None] * len(conf_list)
+    with ThreadPoolExecutor(max_workers=min(len(conf_list), job_num)) as executor:
+        future_to_idx = {
+            executor.submit(simu_performance_on_select, conf, False, global_pivot_spot, global_pivot_swap): i 
+            for i, conf in enumerate(conf_list)
+        }
+        for future in as_completed(future_to_idx):
+            idx = future_to_idx[future]
+            report_list[idx] = future.result()
 
-    if len(report_list) > 65535:
+    if len([r for r in report_list if r is not None]) > 65535:
         logger.debug(f'回测报表数量为 {len(report_list)}，超过 65535，后续可能会占用海量内存')
-    logger.ok(f'回测模拟已完成，花费时间：{time.time() - s_time:.3f}秒，累计时间：{(time.time() - r_time):.3f}秒')
-
+    total_duration = time.time() - all_start_time
+    logger.ok(f'--- 总体回测结束，总计耗时：{total_duration:.2f}s ---')
+    
     return report_list

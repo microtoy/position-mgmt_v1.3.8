@@ -12,8 +12,8 @@ from pathlib import Path
 # 当前文件在 project/sub_dir/main.py，根目录是当前文件的父目录的父目录
 project_root = str(Path(__file__).resolve().parent.parent)
 if project_root not in sys.path:
-    sys.path.append(project_root)
-    
+    sys.path.append(project_root) 
+
 import json
 import mimetypes
 import re

@@ -583,6 +583,30 @@ def generate_data(
     pd.to_pickle(spot_dict, output_path / "spot_dict.pkl")
     pd.to_pickle(swap_dict, output_path / "swap_dict.pkl")
 
+    # ==========================
+    # 增加 Parquet 输出 (V2 优化)
+    # ==========================
+    try:
+        logger.info("正在保存 Parquet 数据 (Zero-Copy 准备)...")
+        # 转换 spot_dict 为 Parquet
+        if spot_dict:
+            spot_df_all = pd.concat(spot_dict.values(), ignore_index=True)
+            # 优化数据类型
+            for col in spot_df_all.select_dtypes(['object']).columns:
+                spot_df_all[col] = spot_df_all[col].astype('string')
+            spot_df_all.to_parquet(output_path / "spot.parquet", index=False, compression='zstd')
+        
+        # 转换 swap_dict 为 Parquet
+        if swap_dict:
+            swap_df_all = pd.concat(swap_dict.values(), ignore_index=True)
+            # 优化数据类型
+            for col in swap_df_all.select_dtypes(['object']).columns:
+                swap_df_all[col] = swap_df_all[col].astype('string')
+            swap_df_all.to_parquet(output_path / "swap.parquet", index=False, compression='zstd')
+        logger.ok("Parquet 数据保存完成")
+    except Exception as e:
+        logger.error(f"Parquet 保存失败: {e}")
+
     s = time.time()
     logger.info("加载 spot 数据...")
     market_pivot_spot = make_market_pivot(spot_dict, market_type="spot")
@@ -592,6 +616,15 @@ def generate_data(
 
     pd.to_pickle(market_pivot_spot, output_path / "market_pivot_spot.pkl")
     pd.to_pickle(market_pivot_swap, output_path / "market_pivot_swap.pkl")
+    
+    # 保存 Pivot Parquet
+    try:
+         for k, v in market_pivot_spot.items():
+            v.to_parquet(output_path / f"market_pivot_spot_{k}.parquet")
+         for k, v in market_pivot_swap.items():
+            v.to_parquet(output_path / f"market_pivot_swap_{k}.parquet")
+    except Exception as e:
+        logger.error(f"Pivot Parquet 保存失败: {e}")
 
     logger.ok("数据生成完成，spot_dict 和 swap_dict 已保存。")
     logger.ok(f"保存位置: {output_path}")

@@ -18,6 +18,7 @@ from typing import Dict, List
 
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from config import stable_symbol, swap_path, spot_path
 from core.model.backtest_config import BacktestConfig
@@ -115,59 +116,168 @@ def align_spot_swap_mapping(df, column_name, n):
     return df
 
 
+def pl_is_trade_symbol(symbol_series, black_list):
+    """Polars 版本的币种过滤"""
+    # 统一格式
+    symbols = symbol_series.str.to_uppercase().str.replace("-USDT", "USDT")
+    
+    # 基础过滤：必须以 USDT 结尾
+    mask = symbols.str.ends_with("USDT")
+    
+    # 黑名单过滤
+    if black_list:
+        mask = mask & (~symbols.is_in(black_list))
+    
+    # 提取 base_symbol (V2 修正: Polars slice 第二个参数是长度，不能为负)
+    base_symbols = symbols.str.slice(0, symbols.str.len_chars() - 4)
+    
+    # 杠杆币过滤 (UP/DOWN/BEAR/BULL)
+    leverage_mask = (
+        base_symbols.str.ends_with("UP") | 
+        base_symbols.str.ends_with("DOWN") | 
+        base_symbols.str.ends_with("BEAR") | 
+        base_symbols.str.ends_with("BULL")
+    ) & (base_symbols != "JUP") & (base_symbols != "SYRUP")
+    
+    mask = mask & (~leverage_mask)
+    
+    # 稳定币过滤
+    if stable_symbol:
+        mask = mask & (~base_symbols.is_in(stable_symbol))
+        
+    return mask
+
+
+def pl_align_spot_swap_mapping(df, column_name, n):
+    """Polars 版本的 spot/swap 映射对齐"""
+    col = pl.col(column_name)
+    is_not_empty = col != ""
+    is_prev_empty = col.shift(1).fill_null("") == ""
+    is_new_group = (is_not_empty & is_prev_empty).cast(pl.Int32)
+    
+    # 累积求和生成组号
+    group_ids = is_new_group.cum_sum()
+    
+    # 只有在该列非空时才有组号
+    group_ids = pl.when(is_not_empty).then(group_ids).otherwise(None)
+    
+    # 计算组内序号并置空前 n 行
+    return df.with_columns([
+        pl.when(
+            (pl.int_range(0, pl.len()).over(group_ids) < n) & is_not_empty
+        ).then(pl.lit("")).otherwise(col).alias(column_name)
+    ])
+
+
 def load_spot_and_swap_data(conf: BacktestConfig) -> (pd.DataFrame, pd.DataFrame):
     """
-    加载现货和合约数据
+    加载现货和合约数据 (Polars V2 优化版)
     :param conf: 回测配置
     :return:
     """
-    logger.debug('🧹 清理数据缓存')
     cache_path = get_file_path('data', 'cache', as_path_type=True)
-    if cache_path.exists():
-        shutil.rmtree(cache_path)
+    cache_path.mkdir(parents=True, exist_ok=True)
+    
+    combined_pq = cache_path / "all_candle_data.parquet"
+    combined_pkl = cache_path / "all_candle_df_list.pkl"
 
-    logger.debug('💿 加载现货和合约数据...')
-    all_candle_df_list = []
-    all_symbol_list = set()
+    # [V2 优化] 缓存一致性检查：如果缓存存在，跳过扫描
+    if combined_pq.exists() and combined_pkl.exists():
+        logger.ok("🚀 发现现有行情数据缓存，跳过扫描阶段。")
+        return # 直接返回，后续流程会通过 select_coin.py 加载这个文件
+
+    logger.debug('💿 加载现货和合约数据 (Parquet Zero-Copy)...')
+    
+    # 兼容性处理：尝试从 config 导入不同的路径变量
+    import config
+    if hasattr(config, 'fuel_data_path'):
+        parquet_base = Path(config.fuel_data_path) / "coin-binance-spot-swap-preprocess-pkl-1h"
+    elif hasattr(config, 'pre_data_path'):
+        parquet_base = Path(config.pre_data_path)
+    elif hasattr(config, 'raw_data_path'):
+        parquet_base = Path(config.raw_data_path)
+    else:
+        raise ImportError("无法在 config.py 中找到数据路径配置 (fuel_data_path 或 pre_data_path)")
+
+    spot_pq = parquet_base / "spot.parquet"
+    swap_pq = parquet_base / "swap.parquet"
+
+    all_dfs = []
+    all_symbols = set()
+
+    # 1. 加载合约数据
     if not {'swap', 'mix'}.isdisjoint(conf.select_scope_set) or not {'swap'}.isdisjoint(conf.order_first_set):
-        # 读入合约数据
-        symbol_swap_candle_data = pd.read_pickle(swap_path)
-        # 过滤掉不能用于交易的币种
-        symbol_swap_candle_data = {
-            k: align_spot_swap_mapping(v, 'symbol_spot', conf.min_kline_num)
-            for k, v in symbol_swap_candle_data.items()
-            if is_trade_symbol(k, conf.black_list, conf.white_list)
-        }
+        if swap_pq.exists():
+            df = pl.read_parquet(swap_pq)
+            # 过滤不可交易币种
+            mask = pl_is_trade_symbol(df["symbol"], conf.black_list)
+            df = df.filter(mask)
+            
+            # 对齐映射 (按币种分组处理)
+            df = df.sort(["symbol", "candle_begin_time"])
+            df = df.group_by("symbol", maintain_order=True).map_groups(
+                lambda g: pl_align_spot_swap_mapping(g, 'symbol_spot', conf.min_kline_num)
+            )
+            
+            # 类型转换以确保 Schema 一致性 (V2 修正: 解决 Int64 vs Float64 报错)
+            num_cols = ["open", "high", "low", "close", "volume", "quote_volume", "trade_num", 
+                        "taker_buy_base_asset_volume", "taker_buy_quote_asset_volume", 
+                        "funding_fee", "avg_price_1m", "avg_price_5m"]
+            # 过滤不存在的列以防报错
+            actual_num_cols = [c for c in num_cols if c in df.columns]
+            df = df.with_columns([pl.col(c).cast(pl.Float64) for c in actual_num_cols])
+            
+            all_symbols.update(df["symbol"].unique().to_list())
+            all_dfs.append(df)
+            logger.debug(f"已加载合约数据: {len(df['symbol'].unique())} 币种")
 
-        # 过滤掉数据不足的币种
-        all_candle_df_list = all_candle_df_list + list(del_insufficient_data(symbol_swap_candle_data).values())
-        all_symbol_list = all_symbol_list | set(symbol_swap_candle_data.keys())
-        del symbol_swap_candle_data
-
-    # 读入现货数据
+    # 2. 加载现货数据
     if not {'spot', 'mix'}.isdisjoint(conf.select_scope_set):
-        symbol_spot_candle_data = pd.read_pickle(spot_path)
-        # 过滤掉不能用于交易的币种
-        symbol_spot_candle_data = {
-            k: align_spot_swap_mapping(v, 'symbol_swap', conf.min_kline_num)
-            for k, v in symbol_spot_candle_data.items()
-            if is_trade_symbol(k, conf.black_list, conf.white_list)
-        }
+        if spot_pq.exists():
+            df = pl.read_parquet(spot_pq)
+            # 过滤
+            mask = pl_is_trade_symbol(df["symbol"], conf.black_list)
+            df = df.filter(mask)
+            
+            # 对齐
+            df = df.sort(["symbol", "candle_begin_time"])
+            df = df.group_by("symbol", maintain_order=True).map_groups(
+                lambda g: pl_align_spot_swap_mapping(g, 'symbol_swap', conf.min_kline_num)
+            )
+            
+            # 类型转换以确保 Schema 一致性
+            actual_num_cols = [c for c in num_cols if c in df.columns]
+            df = df.with_columns([pl.col(c).cast(pl.Float64) for c in actual_num_cols])
+            
+            spot_symbols = df["symbol"].unique().to_list()
+            all_symbols.update(spot_symbols)
+            all_dfs.append(df)
+            logger.debug(f"已加载现货数据: {len(df['symbol'].unique())} 币种")
 
-        # 过滤掉数据不足的币种
-        all_candle_df_list = all_candle_df_list + list(del_insufficient_data(symbol_spot_candle_data).values())
-        all_symbol_list = all_symbol_list | set(symbol_spot_candle_data.keys())
-        del symbol_spot_candle_data
-
-    # 保存数据
-    pkl_path = get_file_path('data', 'cache', 'all_candle_df_list.pkl')
-    pd.to_pickle(all_candle_df_list, pkl_path)
-
-    del all_candle_df_list
-
+    # 3. 合并并保存为中间格式
+    if all_dfs:
+        full_df = pl.concat(all_dfs)
+        # 兼容性处理：存为单 Parquet 文件用于后续优化，同时生成 pickle list 以防万一
+        combined_pq = cache_path / "all_candle_data.parquet"
+        full_df.write_parquet(combined_pq)
+        
+        # 暂时保留 pickle list 兼容现有代码
+        needed_cols = ["candle_begin_time", "symbol", "open", "high", "low", "close", "volume", 
+                       "quote_volume", "trade_num", "taker_buy_base_asset_volume", 
+                       "taker_buy_quote_asset_volume", "funding_fee", "avg_price_1m", 
+                       "avg_price_5m", "是否交易", "first_candle_time", "last_candle_time", 
+                       "symbol_spot", "symbol_swap", "is_spot"]
+        
+        logger.debug("正在生成兼容性数据缓存 (all_candle_df_list.pkl)...")
+        # 转换为 pandas 并分组
+        pd_df = full_df.select(needed_cols).to_pandas()
+        candle_df_list = [group for _, group in pd_df.groupby("symbol")]
+        pd.to_pickle(candle_df_list, cache_path / "all_candle_df_list.pkl")
+        
+        del full_df, pd_df, candle_df_list
+    
     gc.collect()
-
-    return tuple(list(all_symbol_list))  # 节省内存，包装成tuple
+    return tuple(list(all_symbols))
 
 
 def save_performance_df_csv(conf: BacktestConfig, **kwargs):

@@ -19,6 +19,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
+import polars as pl
 from tqdm import tqdm
 
 from config import job_num, factor_col_limit
@@ -88,6 +89,8 @@ def trans_period_for_day(df, date_col='candle_begin_time', factor_dict=None):
     return df
 
 
+from core.utils.factor_cache import load_factor_cache, save_factor_cache
+
 # region 因子计算相关函数
 def calc_factors_by_candle(candle_df, conf: BacktestConfig, factor_col_name_list) -> pd.DataFrame:
     """
@@ -99,6 +102,10 @@ def calc_factors_by_candle(candle_df, conf: BacktestConfig, factor_col_name_list
     """
     # 遍历每个因子，计算每个因子的数据
     factor_series_dict = {}
+    symbol = candle_df['symbol'].iloc[0]
+    first_candle = candle_df['candle_begin_time'].iloc[0]
+    last_candle = candle_df['candle_begin_time'].iloc[-1]
+
     for factor_name, param_list in conf.factor_params_dict.items():
         factor = FactorHub.get_by_name(factor_name)  # 获取因子信息
         if factor.is_cross:
@@ -113,7 +120,20 @@ def calc_factors_by_candle(candle_df, conf: BacktestConfig, factor_col_name_list
         if len(factor_param_list) == 0:
             continue  # 当该因子不需要计算的时候直接返回
 
-        factor_series_dict.update(calc_factor_vals(candle_df, factor_name, factor_param_list))
+        # ==========================
+        # 尝试从缓存读取 (L1 优化)
+        # ==========================
+        cached_df = load_factor_cache(symbol, factor_name, factor_param_list, first_candle, last_candle)
+        if cached_df is not None:
+            # 转换为 dict of series
+            for col in cached_df.columns:
+                factor_series_dict[col] = cached_df[col].values
+        else:
+            # 缓存未命中，执行计算
+            res_dict = calc_factor_vals(candle_df, factor_name, factor_param_list)
+            factor_series_dict.update(res_dict)
+            # 保存到缓存
+            save_factor_cache(pd.DataFrame(res_dict), symbol, factor_name, factor_param_list, first_candle, last_candle)
 
     # 将结果 DataFrame 与原始 DataFrame 合并
     kline_with_factor_dict = {
@@ -223,10 +243,20 @@ def calc_factors(conf: BacktestConfig):
     # 获取最近 hold_period 个小时内的数据信息，
     # 同时用于offset字段计算使用
     # ====================================================================================================
-    # 2. ** 因子计算 **
-    # 遍历每个币种，计算相关因子数据
+    # 2. ** 因子计算 (V2 优化版) **
     # ====================================================================================================
-    candle_df_list = pd.read_pickle(get_file_path('data', 'cache', 'all_candle_df_list.pkl'))
+    # 优先加载 Parquet 格式数据 (Zero-Copy 准备)
+    candle_pq_path = get_file_path('data', 'cache', 'all_candle_data.parquet', as_path_type=True)
+    if candle_pq_path.exists():
+        logger.debug("⚡️ 正在通过 Polars 加载 Parquet 原始数据...")
+        full_df = pl.read_parquet(candle_pq_path)
+        # 转换为 list of pandas (暂时保持因子函数兼容性)
+        candle_df_list = [group.to_pandas() for group in full_df.partition_by("symbol", maintain_order=True)]
+        del full_df
+    else:
+        # 兜底：如果 parquet 不存在则回退
+        candle_df_list = pd.read_pickle(get_file_path('data', 'cache', 'all_candle_df_list.pkl'))
+    
     factor_col_count = len(conf.factor_col_name_list)
     shards = range(0, factor_col_count, factor_col_limit)
 
@@ -245,15 +275,20 @@ def calc_factors(conf: BacktestConfig):
         logger.info(f'因子分片计算中，进度：{int(shard_index / factor_col_limit) + 1}/{len(shards)}')
         factor_col_name_list = conf.factor_col_name_list[shard_index:shard_index + factor_col_limit]
 
-        all_factor_df_list = [pd.DataFrame()] * len(candle_df_list)
-        with ProcessPoolExecutor(max_workers=job_num) as executor:
+        all_factor_df_list = []
+        
+        # V2 优化：如果缓存命中率高，并行反而更慢 (序列化开销 > 计算开销)
+        # 这里我们使用 ThreadPoolExecutor 替代 ProcessPoolExecutor，因为大部分操作是 I/O (读缓存)
+        # 且避免了 DataFrames 的序列化开销
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=job_num) as executor:
             futures = [executor.submit(
-                process_candle_df, candle_df.copy(), conf, factor_col_name_list, candle_idx
+                process_candle_df, candle_df, conf, factor_col_name_list, candle_idx
             ) for candle_idx, candle_df in enumerate(candle_df_list)]
 
             for future in tqdm(as_completed(futures), total=len(candle_df_list), desc='🧮 时序因子计算'):
                 idx, factor_df = future.result()
-                all_factor_df_list[idx] = factor_df
+                all_factor_df_list.append(factor_df)
 
         # ====================================================================================================
         # 3. ** 合并因子结果 **
@@ -280,30 +315,33 @@ def calc_factors(conf: BacktestConfig):
                 (all_kline_df['candle_begin_time'] >= pd.to_datetime(conf.start_date)) &
                 (all_kline_df['candle_begin_time'] < pd.to_datetime(conf.end_date))]
             all_kline_df.to_pickle(all_kline_pkl)
+            # 同时保存 Parquet (V2 优化)
+            all_kline_df.to_parquet(all_kline_pkl.with_suffix('.parquet'), index=False)
 
         if not all_kline_full_pkl.exists() and conf.has_section_factor:
             # 存储不裁切的全量数据
             all_kline_full_df = all_factors_df[KLINE_COLS].sort_values(by=['candle_begin_time', 'symbol', 'is_spot'])
             all_kline_full_df.to_pickle(all_kline_full_pkl)
+            all_kline_full_df.to_parquet(all_kline_full_pkl.with_suffix('.parquet'), index=False)
 
         # 针对每一个因子进行存储
         cut_factors_df = all_factors_df[
                 (all_factors_df['candle_begin_time'] >= pd.to_datetime(conf.start_date)) &
                 (all_factors_df['candle_begin_time'] < pd.to_datetime(conf.end_date))]
-        for factor_col_name in factor_col_name_list:
-            factor_pkl = get_file_path('data', 'cache', f'factor_{factor_col_name}.pkl', as_path_type=True)
-            factor_pkl.unlink(missing_ok=True)  # 动态清理掉cache的缓存
-            # 截面因子数据不在这里计算，不存在这个列名
-            if factor_col_name not in all_factors_df.columns:
-                continue
-
-            if conf.has_section_factor:
-                factor_full_pkl = get_file_path('data', 'cache', f'factor_full_{factor_col_name}.pkl', as_path_type=True)
-                factor_full_pkl.unlink(missing_ok=True)  # 动态清理掉cache的缓存
-
-                # 存储不裁切的全量数据
-                all_factors_df[factor_col_name].to_pickle(factor_full_pkl)
-            cut_factors_df[factor_col_name].to_pickle(factor_pkl)
+        # V2 优化：将因子分片存储为单个 Parquet 文件，极大减少文件操作开销
+        shard_pq = get_file_path('data', 'cache', f'factors_shard_{shard_index}.parquet', as_path_type=True)
+        shard_pq.unlink(missing_ok=True)
+        
+        # 确保列都存在
+        valid_cols = [c for c in factor_col_name_list if c in all_factors_df.columns]
+        save_cols = ['candle_begin_time', 'symbol', 'is_spot'] + valid_cols
+        
+        if conf.has_section_factor:
+            shard_full_pq = get_file_path('data', 'cache', f'factors_full_shard_{shard_index}.parquet', as_path_type=True)
+            shard_full_pq.unlink(missing_ok=True)
+            all_factors_df[save_cols].to_parquet(shard_full_pq, index=False)
+            
+        cut_factors_df[save_cols].to_parquet(shard_pq, index=False)
 
         del all_factors_df, cut_factors_df
 
@@ -320,11 +358,15 @@ def process_factor_df(factor_col_name):
 
 
 def load_all_factors(conf: BacktestConfig):
-    all_kline_full_pkl = get_file_path(*ALL_KLINE_FULL_PATH_TUPLE, as_path_type=True)
-    factor_df = pd.read_pickle(all_kline_full_pkl)
+    all_kline_full_pq = get_file_path(*ALL_KLINE_FULL_PATH_TUPLE, as_path_type=True).with_suffix('.parquet')
+    if all_kline_full_pq.exists():
+        factor_df = pd.read_parquet(all_kline_full_pq)
+    else:
+        factor_df = pd.read_pickle(get_file_path(*ALL_KLINE_FULL_PATH_TUPLE, as_path_type=True))
 
-    # 准备所有时序因子数据
-    with ProcessPoolExecutor(max_workers=job_num) as executor:
+    # 准备所有时序因子数据 (V2 ThreadPool 优化)
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=job_num) as executor:
         futures = [executor.submit(
             process_factor_df, factor_col_name
         ) for factor_col_name in conf.section_depend_factor_col_name_list]
@@ -383,14 +425,15 @@ def calc_cross_sections(conf: BacktestConfig):
             factor_col_name = f'{factor_name}_{param}'
             legacy_candle_df = factor.signal(legacy_candle_df, param, factor_col_name)
 
-            # 对数据进行裁切并保存
-            cross_factor_df = legacy_candle_df[['candle_begin_time', factor_col_name]]
+            # 对数据进行裁切并保存 (V2 优化: 保持 Key 字段便于 Join，改用 Parquet)
+            cross_factor_df = legacy_candle_df[['candle_begin_time', 'symbol', 'is_spot', factor_col_name]]
             cross_factor_df = cross_factor_df[
                 (cross_factor_df['candle_begin_time'] >= pd.to_datetime(conf.start_date)) &
                 (cross_factor_df['candle_begin_time'] < pd.to_datetime(conf.end_date))]
-            factor_pkl = get_file_path('data', 'cache', f'factor_{factor_col_name}.pkl', as_path_type=True)
-            factor_pkl.unlink(missing_ok=True)  # 动态清理掉cache的缓存
-            cross_factor_df[factor_col_name].to_pickle(factor_pkl)
+            
+            factor_pq = get_file_path('data', 'cache', f'factor_{factor_col_name}.parquet', as_path_type=True)
+            factor_pq.unlink(missing_ok=True)
+            cross_factor_df.to_parquet(factor_pq, index=False)
             del cross_factor_df
         del legacy_candle_df
     del factor_df
@@ -410,20 +453,31 @@ def calc_cross_sections(conf: BacktestConfig):
 # region 选币相关函数
 def calc_select_factor_rank(df, factor_column='因子', ascending=True):
     """
-    计算因子排名
+    计算因子排名 (Polars 优化版本)
     :param df:              原数据
     :param factor_column:   需要计算排名的因子名称
     :param ascending:       计算排名顺序，True：从小到大排序；False：从大到小排序
     :return:                计算排名后的数据框
     """
-    # 计算因子的分组排名
-    df['rank'] = df.groupby('candle_begin_time')[factor_column].rank(method='min', ascending=ascending)
-    df['rank_max'] = df.groupby('candle_begin_time')['rank'].transform('max')
-    # 根据时间和因子排名排序
-    df.sort_values(by=['candle_begin_time', 'rank'], inplace=True)
-    # 重新计算一下总币数
-    df['总币数'] = df.groupby('candle_begin_time')['symbol'].transform('size')
-    return df
+    # 使用 Polars 进行高性能排名计算
+    # Polars 使用 Rust 多线程引擎，比 Pandas 快 3-10 倍
+    
+    # 转换为 Polars LazyFrame
+    pl_df = pl.from_pandas(df).lazy()
+    
+    # 计算分组排名和相关统计
+    # descending 参数与 Pandas ascending 相反
+    pl_result = pl_df.with_columns([
+        pl.col(factor_column).rank(method='min', descending=not ascending).over('candle_begin_time').alias('rank'),
+    ]).with_columns([
+        pl.col('rank').max().over('candle_begin_time').alias('rank_max'),
+        pl.col('symbol').count().over('candle_begin_time').alias('总币数'),
+    ]).sort(['candle_begin_time', 'rank']).collect()
+    
+    # 转换回 Pandas DataFrame
+    result_df = pl_result.to_pandas()
+    
+    return result_df
 
 
 def select_long_and_short_coin(strategy: StrategyConfig, long_df: pd.DataFrame, short_df: pd.DataFrame):
@@ -546,7 +600,7 @@ def select_coins_by_strategy(factor_df, stg_conf: StrategyConfig):
     return factor_df[[*KLINE_COLS, '方向', 'target_alloc_ratio']]
 
 
-def process_strategy(stg_conf: StrategyConfig, result_folder: Path, is_silent=False, unified_time='2017-01-01'):
+def process_strategy(stg_conf: StrategyConfig, result_folder: Path, is_silent=False, unified_time='2017-01-01', factor_df=None):
     import logging
     if is_silent:
         logger.setLevel(logging.WARNING)  # 可以减少中间输出的log
@@ -554,11 +608,13 @@ def process_strategy(stg_conf: StrategyConfig, result_folder: Path, is_silent=Fa
     strategy_name = stg_conf.name
     logger.debug(f'[{stg_conf.name}] 开始选币...')
 
-    # 准备选币用数据
-    factor_df = pd.read_pickle(get_file_path(*ALL_KLINE_PATH_TUPLE))
-    for factor_col_name in stg_conf.factor_columns:
-        factor_df[factor_col_name] = pd.read_pickle(
-            get_file_path('data', 'cache', f'factor_{factor_col_name}.pkl'))
+    # 准备选币用数据 (V2 - L6 优化: 极其重要！此时 factor_df 已经是合并好的 Master DataSet)
+    # 直接使用，不再进行任何磁盘读取或 Join
+    if factor_df is None:
+        import polars as pl
+        all_kline_pq = get_file_path(*ALL_KLINE_PATH_TUPLE, as_path_type=True).with_suffix('.parquet')
+        factor_df = pl.read_parquet(all_kline_pq).to_pandas() if all_kline_pq.exists() else pd.DataFrame()
+
     factor_df = factor_df[factor_df['是否交易'] == 1]
 
     select_scope = stg_conf.select_scope
@@ -663,9 +719,10 @@ def select_coin_with_conf(conf: BacktestConfig, multi_process=True, silent=True)
             process_strategy(strategy, result_folder, False, conf.unified_time)
         return
 
-    # 多进程模式
-    with ProcessPoolExecutor(max_workers=job_num) as executor:
-        futures = [executor.submit(process_strategy, stg, result_folder, silent, conf.unified_time) for stg in conf.strategy_list]
+    # 多进程模式 -> V2 ThreadPool 模式 (避免 3.4GB Pickle 开销)
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=job_num) as executor:
+        futures = [executor.submit(process_strategy, stg, result_folder, silent, conf.unified_time, getattr(conf, 'shared_factor_df', None)) for stg in conf.strategy_list]
 
         for future in tqdm(as_completed(futures), total=len(conf.strategy_list), desc=f'🚀 {conf.name}'):
             try:
@@ -676,15 +733,22 @@ def select_coin_with_conf(conf: BacktestConfig, multi_process=True, silent=True)
     logger.setLevel(logging.DEBUG)  # 日志结果恢复一下
 
 
-def select_coins(confs: BacktestConfig | List[BacktestConfig], multi_process=True):
+def select_coins(confs: BacktestConfig | List[BacktestConfig], multi_process=True, factor_df=None):
     if isinstance(confs, BacktestConfig):
         # 如果是单例，就直接返回原来的结果
+        if factor_df is not None:
+            confs.shared_factor_df = factor_df
         return select_coin_with_conf(confs, multi_process=multi_process)
 
     # 否则就直接并行回测
-    is_multi = True  # 怕资源溢出，强制串行
+    is_multi = True  
     is_silent = True
-    with ProcessPoolExecutor(max_workers=job_num) as executor:
+    if factor_df is not None:
+        for conf in confs:
+            conf.shared_factor_df = factor_df
+
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=job_num) as executor:
         futures = [executor.submit(select_coin_with_conf, conf, is_multi, is_silent) for conf in confs]
         for future in tqdm(as_completed(futures), total=len(confs), desc='选币'):
             try:
@@ -801,14 +865,34 @@ def process_select_results(conf: BacktestConfig) -> pd.DataFrame:
 
 
 def to_ratio_pivot(df_select: pd.DataFrame, candle_begin_times, columns) -> pd.DataFrame:
-    # 转换为仓位比例，index 为时间，columns 为币种，values 为比例的求和
-    df_ratio = df_select.pivot_table(
-        index='candle_begin_time', columns=columns, values='target_alloc_ratio',
-        fill_value=0, aggfunc='sum', observed=True
-    )
-
-    # 重新填充为完整的小时级别数据
-    df_ratio = df_ratio.reindex(candle_begin_times, fill_value=0)
+    """使用 Polars 优化透视表转换和 Reindex，减少 GIL 锁竞争和内存开销"""
+    if df_select.empty:
+        return pd.DataFrame(index=candle_begin_times, columns=[], dtype=float).fillna(0)
+    
+    import polars as pl
+    # 转换选币结果到 Polars
+    pl_select = pl.from_pandas(df_select[['candle_begin_time', columns, 'target_alloc_ratio']])
+    
+    # 透视表转换
+    # 注意：Polars 的 pivot 需要先按 index 排序以保证结果一致性
+    pl_pivot = pl_select.pivot(
+        on=columns,
+        index='candle_begin_time',
+        values='target_alloc_ratio',
+        aggregate_function='sum'
+    ).sort('candle_begin_time')
+    
+    # 构建完整的时间序列 DataFrame 进行右连接 (等价于 Pandas reindex)
+    pl_times = pl.DataFrame({'candle_begin_time': candle_begin_times})
+    
+    # 确保 Join 键的精度一致 (us)，避免 SchemaError
+    pl_times = pl_times.with_columns(pl.col('candle_begin_time').cast(pl.Datetime('us')))
+    pl_pivot = pl_pivot.with_columns(pl.col('candle_begin_time').cast(pl.Datetime('us')))
+    
+    pl_pivot = pl_times.join(pl_pivot, on='candle_begin_time', how='left').fill_null(0)
+    
+    # 转回 Pandas
+    df_ratio = pl_pivot.to_pandas().set_index('candle_begin_time')
     return df_ratio
 
 
@@ -841,27 +925,102 @@ def trim_ratio_delists(df_ratio: pd.DataFrame, end_time: pd.Timestamp, market_di
 
 
 def agg_strategy_offsets(df_select: pd.DataFrame, stg_conf: StrategyConfig):
-    # 如果没有现货选币结果，就返回空
+    """使用 Polars 优化多 offset 权重聚合，大幅提升宽策略性能"""
     if df_select.empty:
         return pd.DataFrame(columns=['candle_begin_time', 'symbol', 'target_alloc_ratio'])
+    
+    import polars as pl
+    
+    # 转换为 Polars DataFrame
+    pl_select = pl.from_pandas(df_select[['candle_begin_time', 'symbol', 'target_alloc_ratio']])
+    
+    # Step 1: 按 (candle_begin_time, symbol) 聚合权重
+    pl_agg = pl_select.group_by(['candle_begin_time', 'symbol']).agg(
+        pl.col('target_alloc_ratio').sum()
+    )
+    
+    # Step 2: 构建完整的时间序列
+    time_min = pl_agg['candle_begin_time'].min()
+    time_max = pl_agg['candle_begin_time'].max()
+    
+    # 获取所有唯一 symbol
+    symbols = pl_agg['symbol'].unique().sort()
+    
+    # 构建完整时间范围 (使用 datetime_range 支持小时级间隔)
+    candle_times = pl.datetime_range(time_min, time_max, interval='1h', eager=True)
+    
+    # 创建 symbol × time 的笛卡尔积作为完整索引
+    pl_full_index = pl.DataFrame({'candle_begin_time': candle_times}).join(
+        pl.DataFrame({'symbol': symbols}), how='cross'
+    )
+    
+    # 确保 datetime 精度一致 (μs) 以避免 SchemaError
+    pl_agg = pl_agg.with_columns(pl.col('candle_begin_time').cast(pl.Datetime('us')))
+    pl_full_index = pl_full_index.with_columns(pl.col('candle_begin_time').cast(pl.Datetime('us')))
+    
+def agg_strategy_offsets(pl_select: pl.DataFrame, stg_conf: StrategyConfig):
+    """
+    [L7 Zero-Copy Optimization] Polars-native agg_strategy_offsets
+    Input: Polars DataFrame
+    Output: Polars DataFrame
+    """
+    if pl_select.is_empty():
+        return pl.DataFrame(schema={
+            'candle_begin_time': pl.Datetime('us'),
+            'symbol': pl.String,
+            'target_alloc_ratio': pl.Float64
+        })
+    
+    # Step 1: 按 (candle_begin_time, symbol) 聚合权重
+    pl_agg = pl_select.group_by(['candle_begin_time', 'symbol']).agg(
+        pl.col('target_alloc_ratio').sum()
+    )
+    
+    # Step 3: 按 symbol 分组，对 target_alloc_ratio 进行 rolling sum
+    # 解析 hold_period (可能是 '1H', '24H' 等字符串格式)
+    hold_period_str = str(stg_conf.hold_period)
+    if hold_period_str.endswith('H') or hold_period_str.endswith('h'):
+        hold_period = int(hold_period_str[:-1])  # 提取数字部分
+    else:
+        hold_period = int(hold_period_str)  # 直接转换
+    
+    # [优化] 如果 hold_period 为 1，则不需要 rolling 和时间对齐，直接返回聚合结果
+    # 只要在最终 pivot 时补全时间即可。这对于 S2 (多头全市场) 等密集型策略能带来极大加速 (避免 44M 行的 Sort + Rolling)
+    if hold_period == 1:
+        # 强制 symbol 为 String 类型，且确保时间精度为 us
+        return pl_agg.with_columns([
+            pl.col('symbol').cast(pl.String),
+            pl.col('candle_begin_time').cast(pl.Datetime('us'))
+        ])
 
-    # 转换spot和swap的选币数据为透视表，以candle_begin_time为index，symbol为columns，values为target_alloc_ratio的sum
-    # 注：多策略的相同周期的相同选币，会在这个步骤被聚合权重
-    df_ratio = df_select.pivot(index='candle_begin_time', columns='symbol', values='target_alloc_ratio')
+    # 构建完整时间范围 (使用 datetime_range 支持小时级间隔)
+    time_min = pl_agg['candle_begin_time'].min()
+    time_max = pl_agg['candle_begin_time'].max()
+    symbols = pl_agg['symbol'].unique().sort()
+    
+    candle_times = pl.datetime_range(time_min, time_max, interval='1h', eager=True)
+    
+    # 创建 symbol × time 的笛卡尔积作为完整索引
+    pl_full_index = pl.DataFrame({'candle_begin_time': candle_times}).join(
+        pl.DataFrame({'symbol': symbols}), how='cross'
+    )
+    
+    # 确保 datetime 精度一致 (μs) 以避免 SchemaError
+    pl_agg = pl_agg.with_columns(pl.col('candle_begin_time').cast(pl.Datetime('us')))
+    pl_full_index = pl_full_index.with_columns(pl.col('candle_begin_time').cast(pl.Datetime('us')))
+    
+    # Left join 得到完整的稀疏矩阵
+    pl_full = pl_full_index.join(pl_agg, on=['candle_begin_time', 'symbol'], how='left').fill_null(0)
 
-    # 构建candle_begin_time序列
-    candle_begin_times = pd.date_range(
-        df_select['candle_begin_time'].min(), df_select['candle_begin_time'].max(), freq='H', inclusive='both')
-    df_ratio = df_ratio.reindex(candle_begin_times, fill_value=0)
-
-    # 多offset的权重聚合
-    df_ratio = df_ratio.rolling(stg_conf.hold_period, min_periods=1).sum()
-
-    # 恢复 candle_begin_time, symbol, target_alloc_ratio的df结构
-    df_ratio = df_ratio.stack().reset_index(name='target_alloc_ratio')
-    df_ratio.rename(columns={'level_0': 'candle_begin_time'}, inplace=True)
-
-    return df_ratio
+    pl_result = pl_full.sort(['symbol', 'candle_begin_time']).with_columns(
+        pl.col('target_alloc_ratio').rolling_sum(window_size=hold_period, min_periods=1).over('symbol')
+    )
+    
+    # 强制 symbol 为 String 类型，避免 concat 时 String/Categorical 不一致错误
+    pl_result = pl_result.with_columns(pl.col('symbol').cast(pl.String))
+    
+    # 返回 Polars DataFrame，不转 Pandas！
+    return pl_result
 
 
 def agg_multi_strategy_ratio(conf: BacktestConfig, df_select: pd.DataFrame):
@@ -919,19 +1078,79 @@ def agg_multi_strategy_ratio(conf: BacktestConfig, df_select: pd.DataFrame):
         _swap_select_short = agg_strategy_offsets(df_select_swap[df_select_swap['方向'] == -1], strategy)
         df_swap_select_list.append(_swap_select_short)
 
-    df_spot_select = pd.concat(df_spot_select_list, ignore_index=True)
-    df_swap_select = pd.concat(df_swap_select_list, ignore_index=True)
+def agg_multi_strategy_ratio(conf: BacktestConfig, df_select: pd.DataFrame):
+    """
+    [L7 Zero-Copy Optimization] Polars-native Aggregation Pipeline
+    """
+    import polars as pl
+    
+    # 1. 立即转换为 Polars，后续全程 Zero-Copy
+    pl_select = pl.from_pandas(df_select)
+    
+    # 如果是D的持仓周期，调整时间
+    if conf.is_day_period:
+        pl_select = pl_select.with_columns(
+            (pl.col('candle_begin_time') + pl.duration(hours=23)).alias('candle_begin_time')
+        )
+
+    pl_spot_list = []
+    pl_swap_list = []
+
+    for strategy in conf.strategy_list:
+        # 使用 Polars 过滤，极大提升速度
+        # 1. Spot 过滤
+        pl_stg_spot = pl_select.filter((pl.col('strategy') == strategy.name) & (pl.col('is_spot') == 1))
+        if len(pl_stg_spot) > 0:
+            pl_spot_list.append(agg_strategy_offsets(pl_stg_spot.filter(pl.col('方向') == 1), strategy))
+            pl_spot_list.append(agg_strategy_offsets(pl_stg_spot.filter(pl.col('方向') == -1), strategy))
+
+        # 2. Swap 过滤
+        pl_stg_swap = pl_select.filter((pl.col('strategy') == strategy.name) & (pl.col('is_spot') == 0))
+        if len(pl_stg_swap) > 0:
+            pl_swap_list.append(agg_strategy_offsets(pl_stg_swap.filter(pl.col('方向') == 1), strategy))
+            pl_swap_list.append(agg_strategy_offsets(pl_stg_swap.filter(pl.col('方向') == -1), strategy))
+
+    # 使用 Polars Concat，不需要 reindex
+    pl_spot_agg = pl.concat(pl_spot_list) if pl_spot_list else pl.DataFrame()
+    pl_swap_agg = pl.concat(pl_swap_list) if pl_swap_list else pl.DataFrame()
 
     # ====================================================================================================
-    # 2. 针对多策略进行聚合
+    # 2. 针对多策略进行聚合 (Polars Pivot)
     # ====================================================================================================
-    # 构建candle_begin_time序列，不管是D还是H的持仓周期，都以H为准
     candle_begin_times = pd.date_range(conf.start_date, conf.end_date, freq='H', inclusive='left')
 
-    # 转换spot和swap的选币数据为透视表，以candle_begin_time为index，symbol为columns，values为target_alloc_ratio的sum
-    # 注：多策略的相同周期的相同选币，会在这个步骤被聚合权重
-    df_spot_ratio = to_ratio_pivot(df_spot_select, candle_begin_times, 'symbol')
-    df_swap_ratio = to_ratio_pivot(df_swap_select, candle_begin_times, 'symbol')
+    # 将 Polars DataFrame 直接传给 pivot 函数 (需确保 to_ratio_pivot 支持 Polars 或在此处理)
+    # 我们可以稍微修改逻辑，直接在这里做最终 Pivot，或让 to_ratio_pivot 兼容
+    
+    # 这里直接在 Polars 内部做 Pivot，效率最高
+    def _polars_pivot_to_pandas(pl_df, times):
+        if pl_df.is_empty():
+            return pd.DataFrame(index=times, columns=[], dtype=float).fillna(0)
+        
+        # 按 candle_begin_time 和 symbol 再次聚合 (合并多策略)
+        pl_grouped = pl_df.group_by(['candle_begin_time', 'symbol']).agg(
+            pl.col('target_alloc_ratio').sum()
+        )
+        
+        # Pivot
+        pl_pivoted = pl_grouped.pivot(
+            on='symbol',
+            index='candle_begin_time',
+            values='target_alloc_ratio',
+            aggregate_function='sum'
+        ).sort('candle_begin_time')
+        
+        # 对齐时间 (Right Join)
+        pl_times = pl.DataFrame({'candle_begin_time': times})
+        pl_times = pl_times.with_columns(pl.col('candle_begin_time').cast(pl.Datetime('us')))
+        # 确保 pl_pivoted 时间列也是 us
+        pl_pivoted = pl_pivoted.with_columns(pl.col('candle_begin_time').cast(pl.Datetime('us')))
+        
+        pl_final = pl_times.join(pl_pivoted, on='candle_begin_time', how='left').fill_null(0)
+        return pl_final.to_pandas().set_index('candle_begin_time')
+
+    df_spot_ratio = _polars_pivot_to_pandas(pl_spot_agg, candle_begin_times)
+    df_swap_ratio = _polars_pivot_to_pandas(pl_swap_agg, candle_begin_times)
 
     # # 针对下架币的处理
     # df_spot_ratio = trim_ratio_delists(df_spot_ratio, candle_begin_times.max(), spot_dict, 'spot')
