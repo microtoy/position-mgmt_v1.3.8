@@ -3,5 +3,7 @@
     "topic_pattern": "/thread/",
     "output_dir": "output",
     "state_file": "state.json",
-    "links_file": "links.json"
+    "links_file": "links.json",
+    "wecom_webhook": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=06073908-e79a-41ee-ad07-6d30f3a18f6a",
+    "wecom_webhook_error": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=37e8fb61-b8be-45d0-9290-f0ed2d13ded7"
 }

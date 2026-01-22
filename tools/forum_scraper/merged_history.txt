@@ -498,3 +498,303 @@ downloaded_pdfs/论资金流策略何时失效之拥挤度分析_14310.pdf
 downloaded_pdfs/超级好用-一张图显示多B种多周期多时段的累计涨跌幅-自用工具-开袋即食_16448.pdf
 downloaded_pdfs/远程调试容器代码详细教程（超实用 快速上手）_7792.pdf
 downloaded_pdfs/量化笔记77：直播总结  毅知伴解10：股票市场的注意力机制_27215.pdf
+downloaded_pdfs/基于渐增老板改的盘中换仓_29119.pdf
+downloaded_pdfs/增加几行代码画出多个offset净值线图_15032.pdf
+downloaded_pdfs/复现指南：Google Sheets API 配置流程_16682.pdf
+downloaded_pdfs/多BTC空其他币脚本生成数据整理_9466.pdf
+downloaded_pdfs/如何抓取新浪财经限售解禁数据（附源码）‎_2248.pdf
+downloaded_pdfs/如果买入的票ST了，马上卖出_41774.pdf
+downloaded_pdfs/定投策略研究三： AHR999指标分析和移植ETH_18885.pdf
+downloaded_pdfs/定时获取币安费率写入csv--基础数据1.3更新_7392.pdf
+downloaded_pdfs/定时调度的方式执行条件单+防滑点下单_29281.pdf
+downloaded_pdfs/对AI协助理解代码的小记录-以“计算ema指标”为例_23300.pdf
+downloaded_pdfs/小小EMA，暗藏大麻烦_25111.pdf
+downloaded_pdfs/币圈科学家 ：UNIX撸币，还剩两天，有兴趣的撸一撸_7281.pdf
+downloaded_pdfs/币安0手续费的高频策略，分享下这个策略的优化过程_14173.pdf
+downloaded_pdfs/币安U本位--单账户-多周期-多币种-动态杠杆自用框架（1）_7257.pdf
+downloaded_pdfs/币安下架事件研究_保温杯必看_41707.pdf
+downloaded_pdfs/币安币本位网格合约框架-囤币神器（轻松增加年收益50%+）-开箱即用_7568.pdf
+downloaded_pdfs/币安计算手续费与返佣，小白教程_29728.pdf
+downloaded_pdfs/帕劳数字身份申请，WEB3必备数字身份_16449.pdf
+downloaded_pdfs/当女娲遇上维多利亚（中性 X 事件框架）_8281.pdf
+downloaded_pdfs/慢慢富一月份亏了0.38BTC_19025.pdf
+downloaded_pdfs/打造多策略多币种CTA策略军团--多币种参数高原自动寻找和部署_16483.pdf
+downloaded_pdfs/批量选垃圾币代码（自动推送版）_9491.pdf
+downloaded_pdfs/拿破仑事件策略-研报标题情绪分类（机器学习）_16786.pdf
+downloaded_pdfs/拿破仑实盘回测系列六--尾盘再买行不行_14737.pdf
+downloaded_pdfs/指数多周期共振、多空信号盘中监控实时推送工具、开箱即用_15475.pdf
+downloaded_pdfs/数字货币相同币种跨平台套利回测框架_8290.pdf
+downloaded_pdfs/数据互助之扣非净利润_7097.pdf
+downloaded_pdfs/日拱一卒——分享会学习笔记：涨跌幅复权法深入思考与研究_29354.pdf
+downloaded_pdfs/最好的电子书网站Z-Library_27257.pdf
+downloaded_pdfs/有序吃瓜——2021年底券商某个有趣的报告_9093.pdf
+downloaded_pdfs/未来的兑现——咩咩羊来分析预测公司未来的财务数据_25876.pdf
+downloaded_pdfs/根据8小时资金费率数据加密成5分钟的资金费率并整合5分钟k线数据程序-开袋即食_13744.pdf
+downloaded_pdfs/每天起床后——做多：过去一周均线斜率较大的币，做空：较小的。一年下来收益超过70倍？_9770.pdf
+downloaded_pdfs/用Tushare获取股票公告_675.pdf
+downloaded_pdfs/皮尔逊选可转债策略_16375.pdf
+downloaded_pdfs/第五期中性船队直播01：启航篇_13516.pdf
+downloaded_pdfs/老司机QMT交易工具2-数据更新功能_29287.pdf
+downloaded_pdfs/股票多头与股指期货空头的多空对冲_32543.pdf
+downloaded_pdfs/自动调整策略中的因子命名_29270.pdf
+downloaded_pdfs/花式网格需要日更的数据_9273.pdf
+downloaded_pdfs/花网回测：因子排名调整_15117.pdf
+downloaded_pdfs/花网止损程序的问题 真金白银换来的经验_11225.pdf
+downloaded_pdfs/资金费率为负不做空_12584.pdf
+downloaded_pdfs/选股策略坯子系列1：亏损股的筹码空间_33896.pdf
+downloaded_pdfs/通过飞书文档管理课程进度的模板_14423.pdf
+downloaded_pdfs/邢大网格回测框架：grid_touch_info() 函数改写，有葫芦？_8587.pdf
+downloaded_pdfs/量化中会用到的统计学 - 3假设检验_8887.pdf
+downloaded_pdfs/量化中会用到的统计学_8882.pdf
+downloaded_pdfs/香港居民内地日常电子支付指北_36370.pdf
+downloaded_pdfs/验证红牛大佬的孕线策略及改进_29201.pdf
+downloaded_pdfs/基于渐增老板改的盘中换仓_29119.pdf
+downloaded_pdfs/增加几行代码画出多个offset净值线图_15032.pdf
+downloaded_pdfs/复现指南：Google Sheets API 配置流程_16682.pdf
+downloaded_pdfs/多BTC空其他币脚本生成数据整理_9466.pdf
+downloaded_pdfs/如何抓取新浪财经限售解禁数据（附源码）‎_2248.pdf
+downloaded_pdfs/如果买入的票ST了，马上卖出_41774.pdf
+downloaded_pdfs/定投策略研究三： AHR999指标分析和移植ETH_18885.pdf
+downloaded_pdfs/定时获取币安费率写入csv--基础数据1.3更新_7392.pdf
+downloaded_pdfs/定时调度的方式执行条件单+防滑点下单_29281.pdf
+downloaded_pdfs/对AI协助理解代码的小记录-以“计算ema指标”为例_23300.pdf
+downloaded_pdfs/小小EMA，暗藏大麻烦_25111.pdf
+downloaded_pdfs/币圈科学家 ：UNIX撸币，还剩两天，有兴趣的撸一撸_7281.pdf
+downloaded_pdfs/币安0手续费的高频策略，分享下这个策略的优化过程_14173.pdf
+downloaded_pdfs/币安U本位--单账户-多周期-多币种-动态杠杆自用框架（1）_7257.pdf
+downloaded_pdfs/币安下架事件研究_保温杯必看_41707.pdf
+downloaded_pdfs/币安币本位网格合约框架-囤币神器（轻松增加年收益50%+）-开箱即用_7568.pdf
+downloaded_pdfs/币安计算手续费与返佣，小白教程_29728.pdf
+downloaded_pdfs/帕劳数字身份申请，WEB3必备数字身份_16449.pdf
+downloaded_pdfs/当女娲遇上维多利亚（中性 X 事件框架）_8281.pdf
+downloaded_pdfs/慢慢富一月份亏了0.38BTC_19025.pdf
+downloaded_pdfs/打造多策略多币种CTA策略军团--多币种参数高原自动寻找和部署_16483.pdf
+downloaded_pdfs/批量选垃圾币代码（自动推送版）_9491.pdf
+downloaded_pdfs/拿破仑事件策略-研报标题情绪分类（机器学习）_16786.pdf
+downloaded_pdfs/拿破仑实盘回测系列六--尾盘再买行不行_14737.pdf
+downloaded_pdfs/指数多周期共振、多空信号盘中监控实时推送工具、开箱即用_15475.pdf
+downloaded_pdfs/数字货币相同币种跨平台套利回测框架_8290.pdf
+downloaded_pdfs/数据互助之扣非净利润_7097.pdf
+downloaded_pdfs/日拱一卒——分享会学习笔记：涨跌幅复权法深入思考与研究_29354.pdf
+downloaded_pdfs/最好的电子书网站Z-Library_27257.pdf
+downloaded_pdfs/有序吃瓜——2021年底券商某个有趣的报告_9093.pdf
+downloaded_pdfs/未来的兑现——咩咩羊来分析预测公司未来的财务数据_25876.pdf
+downloaded_pdfs/根据8小时资金费率数据加密成5分钟的资金费率并整合5分钟k线数据程序-开袋即食_13744.pdf
+downloaded_pdfs/每天起床后——做多：过去一周均线斜率较大的币，做空：较小的。一年下来收益超过70倍？_9770.pdf
+downloaded_pdfs/用Tushare获取股票公告_675.pdf
+downloaded_pdfs/皮尔逊选可转债策略_16375.pdf
+downloaded_pdfs/第五期中性船队直播01：启航篇_13516.pdf
+downloaded_pdfs/老司机QMT交易工具2-数据更新功能_29287.pdf
+downloaded_pdfs/股票多头与股指期货空头的多空对冲_32543.pdf
+downloaded_pdfs/自动调整策略中的因子命名_29270.pdf
+downloaded_pdfs/花式网格需要日更的数据_9273.pdf
+downloaded_pdfs/花网回测：因子排名调整_15117.pdf
+downloaded_pdfs/花网止损程序的问题 真金白银换来的经验_11225.pdf
+downloaded_pdfs/资金费率为负不做空_12584.pdf
+downloaded_pdfs/选股策略坯子系列1：亏损股的筹码空间_33896.pdf
+downloaded_pdfs/通过飞书文档管理课程进度的模板_14423.pdf
+downloaded_pdfs/邢大网格回测框架：grid_touch_info() 函数改写，有葫芦？_8587.pdf
+downloaded_pdfs/量化中会用到的统计学 - 3假设检验_8887.pdf
+downloaded_pdfs/量化中会用到的统计学_8882.pdf
+downloaded_pdfs/香港居民内地日常电子支付指北_36370.pdf
+downloaded_pdfs/验证红牛大佬的孕线策略及改进_29201.pdf
+downloaded_pdfs/2020年研报简报阅读便笺_3012.pdf
+downloaded_pdfs/BL仓位动态平衡小工具【开袋即食】_24275.pdf
+downloaded_pdfs/BL打地鼠定投模式的按比例平仓【修复个bug--一不小心平掉了交割合约多头】_30375.pdf
+downloaded_pdfs/Biyapay结合境外银行卡出入金-一种新的出入金方式_39175.pdf
+downloaded_pdfs/CAPM选股策略，阶段性表现出色，适合加入轮动池子的一个基础策略！_28495.pdf
+downloaded_pdfs/Discord 推特 英语网页自动翻译保姆级教程_8206.pdf
+downloaded_pdfs/ETH 2.0 merge和分叉套利复盘：如何一夜零撸20万刀_15266.pdf
+downloaded_pdfs/GameFi小白的福音：提前布局DAR，成本低见效快！_7288.pdf
+downloaded_pdfs/QMT盘中选股之实盘数据准备_22148.pdf
+downloaded_pdfs/Rocket实现自动打新、中签提示（缴款好像目前没办法实现）_26347.pdf
+downloaded_pdfs/Thread_28800_28800.pdf
+downloaded_pdfs/Thread_29625_29625.pdf
+downloaded_pdfs/Thread_30004_30004.pdf
+downloaded_pdfs/[1] 剖析 J 神币本位半套策略范式：U 本位对币本位的理论等效_27829.pdf
+downloaded_pdfs/[2] [v1.22] Non-Offset 对冲框架开发：策略组合思路及相关功能完善_15683.pdf
+downloaded_pdfs/[修天威] (staking) 投资有限额？子账户来帮忙_11636.pdf
+downloaded_pdfs/[修天威] (网格) 网格挂单占用大量资金？用这个方法可以释放大量资金_12568.pdf
+downloaded_pdfs/[学废新技能] 分析师评级为1+公司深度报告+分析师收益过滤+大盘跌幅过滤_年化收益回撤比_8.56_24225.pdf
+downloaded_pdfs/[市场观察系列] Binance U 本位合约监控比对，观察纳入 BUSD 交易对的合适时机_16469.pdf
+downloaded_pdfs/[知行合一][策略复现]月相择时浅析及自研因子填坑_26187.pdf
+downloaded_pdfs/[股票]后羿策略——拥挤就要被射，拥挤度过滤择时[附全套代码]_14734.pdf
+downloaded_pdfs/chatgpt接入飞书，畅游无阻_20670.pdf
+downloaded_pdfs/remix-ide remixd 本地安装与方便使用_9225.pdf
+downloaded_pdfs/rose公链首个defi项目yuzuswap挖矿教程_8860.pdf
+downloaded_pdfs/“到底是什么系列”之五：期货指数与主连复权差异化分析（终章）_2138.pdf
+downloaded_pdfs/“到底是什么系列之16”我实盘的ETF轮动策略_4699.pdf
+downloaded_pdfs/“到底是什么系列之26”仅用成交量构造异质化CTA策略_8950.pdf
+downloaded_pdfs/“到底是什么系列之40”经典KD另类改编_16642.pdf
+downloaded_pdfs/“到底是什么系列之43”累积概率密度在突破策略中的应用_17324.pdf
+downloaded_pdfs/“这次真的不一样”_18273.pdf
+downloaded_pdfs/“量化杂志学习系列之1”Trading Bands For Trends_7195.pdf
+downloaded_pdfs/“量化杂志系列之6”波段交易江恩高低激活器(Gann Hi-Lo)_8955.pdf
+downloaded_pdfs/《缠论》笔记分享之心法部分_8537.pdf
+downloaded_pdfs/【 Rocket_3.3.3 修改 】升级修改 监控每日交易信息，监控下单异常_31996.pdf
+downloaded_pdfs/【 Rocket_V2_2.11.3 修改 】完善 监控每日交易信息，监控下单异常_20594.pdf
+downloaded_pdfs/【Andy.hsc🌕】分析师评级为1+公司深度报告+量价过滤_144.32%_9.06_24530.pdf
+downloaded_pdfs/【BMAC2.0-后传】BmacKit 基于 BMAC 异步高效因子计算架构_44984.pdf
+downloaded_pdfs/【BMAC2.0-正传（上）】BMAC2的配置与使用_44366.pdf
+downloaded_pdfs/【BUG修正】关于某些老板处理原始数据时报错_25956.pdf
+downloaded_pdfs/【CTA系列3】多合约币种策略参数及盈利行情分析——以J神布林带单参数策略为例_45255.pdf
+downloaded_pdfs/【F1配置数据】深入理解阵雨老板的数据中心_42712.pdf
+downloaded_pdfs/【K线密度】如何寻找K线的波峰波谷_29292.pdf
+downloaded_pdfs/【Wutao】多QMT实盘环境搭建的最佳实践及实盘建议 - 【更新多QMT行情订阅服务端口修改】_25317.pdf
+downloaded_pdfs/【v2023.3.16 Fuel】保持代码框架不变，二十多行实现多定时更新数据_23882.pdf
+downloaded_pdfs/【一呆道法术器系列】之【术】：【回溯周期，判断周期，换仓周期】 【中性offset的非等权开仓的实盘实现】_13080.pdf
+downloaded_pdfs/【保温杯内存分析】解析为什么2号脚本吃内存？_37611.pdf
+downloaded_pdfs/【保温杯加热器】一个万金油配置让你的保温杯年化多三成_34850.pdf
+downloaded_pdfs/【保温杯复盘】你真的了解你的策略吗？_42508.pdf
+downloaded_pdfs/【信号共享】MACD顶底背驰信号_20933_副本.pdf
+downloaded_pdfs/【全自动量化交易系统】自用风控组件—U本位仓位动态对冲组件_v1（附代码，开袋即食）_19044.pdf
+downloaded_pdfs/2020年研报简报阅读便笺_3012.pdf
+downloaded_pdfs/BL仓位动态平衡小工具【开袋即食】_24275.pdf
+downloaded_pdfs/BL打地鼠定投模式的按比例平仓【修复个bug--一不小心平掉了交割合约多头】_30375.pdf
+downloaded_pdfs/Biyapay结合境外银行卡出入金-一种新的出入金方式_39175.pdf
+downloaded_pdfs/CAPM选股策略，阶段性表现出色，适合加入轮动池子的一个基础策略！_28495.pdf
+downloaded_pdfs/Discord 推特 英语网页自动翻译保姆级教程_8206.pdf
+downloaded_pdfs/ETH 2.0 merge和分叉套利复盘：如何一夜零撸20万刀_15266.pdf
+downloaded_pdfs/GameFi小白的福音：提前布局DAR，成本低见效快！_7288.pdf
+downloaded_pdfs/QMT盘中选股之实盘数据准备_22148.pdf
+downloaded_pdfs/Rocket实现自动打新、中签提示（缴款好像目前没办法实现）_26347.pdf
+downloaded_pdfs/Thread_28800_28800.pdf
+downloaded_pdfs/Thread_29625_29625.pdf
+downloaded_pdfs/Thread_30004_30004.pdf
+downloaded_pdfs/[1] 剖析 J 神币本位半套策略范式：U 本位对币本位的理论等效_27829.pdf
+downloaded_pdfs/[2] [v1.22] Non-Offset 对冲框架开发：策略组合思路及相关功能完善_15683.pdf
+downloaded_pdfs/[修天威] (staking) 投资有限额？子账户来帮忙_11636.pdf
+downloaded_pdfs/[修天威] (网格) 网格挂单占用大量资金？用这个方法可以释放大量资金_12568.pdf
+downloaded_pdfs/[学废新技能] 分析师评级为1+公司深度报告+分析师收益过滤+大盘跌幅过滤_年化收益回撤比_8.56_24225.pdf
+downloaded_pdfs/[市场观察系列] Binance U 本位合约监控比对，观察纳入 BUSD 交易对的合适时机_16469.pdf
+downloaded_pdfs/[知行合一][策略复现]月相择时浅析及自研因子填坑_26187.pdf
+downloaded_pdfs/[股票]后羿策略——拥挤就要被射，拥挤度过滤择时[附全套代码]_14734.pdf
+downloaded_pdfs/chatgpt接入飞书，畅游无阻_20670.pdf
+downloaded_pdfs/remix-ide remixd 本地安装与方便使用_9225.pdf
+downloaded_pdfs/rose公链首个defi项目yuzuswap挖矿教程_8860.pdf
+downloaded_pdfs/“到底是什么系列”之五：期货指数与主连复权差异化分析（终章）_2138.pdf
+downloaded_pdfs/“到底是什么系列之16”我实盘的ETF轮动策略_4699.pdf
+downloaded_pdfs/“到底是什么系列之26”仅用成交量构造异质化CTA策略_8950.pdf
+downloaded_pdfs/“到底是什么系列之40”经典KD另类改编_16642.pdf
+downloaded_pdfs/“到底是什么系列之43”累积概率密度在突破策略中的应用_17324.pdf
+downloaded_pdfs/“这次真的不一样”_18273.pdf
+downloaded_pdfs/“量化杂志学习系列之1”Trading Bands For Trends_7195.pdf
+downloaded_pdfs/“量化杂志系列之6”波段交易江恩高低激活器(Gann Hi-Lo)_8955.pdf
+downloaded_pdfs/《缠论》笔记分享之心法部分_8537.pdf
+downloaded_pdfs/【 Rocket_3.3.3 修改 】升级修改 监控每日交易信息，监控下单异常_31996.pdf
+downloaded_pdfs/【 Rocket_V2_2.11.3 修改 】完善 监控每日交易信息，监控下单异常_20594.pdf
+downloaded_pdfs/【Andy.hsc🌕】分析师评级为1+公司深度报告+量价过滤_144.32%_9.06_24530.pdf
+downloaded_pdfs/【BMAC2.0-后传】BmacKit 基于 BMAC 异步高效因子计算架构_44984.pdf
+downloaded_pdfs/【BMAC2.0-正传（上）】BMAC2的配置与使用_44366.pdf
+downloaded_pdfs/【BUG修正】关于某些老板处理原始数据时报错_25956.pdf
+downloaded_pdfs/【CTA系列3】多合约币种策略参数及盈利行情分析——以J神布林带单参数策略为例_45255.pdf
+downloaded_pdfs/【F1配置数据】深入理解阵雨老板的数据中心_42712.pdf
+downloaded_pdfs/【K线密度】如何寻找K线的波峰波谷_29292.pdf
+downloaded_pdfs/【Wutao】多QMT实盘环境搭建的最佳实践及实盘建议 - 【更新多QMT行情订阅服务端口修改】_25317.pdf
+downloaded_pdfs/【v2023.3.16 Fuel】保持代码框架不变，二十多行实现多定时更新数据_23882.pdf
+downloaded_pdfs/【一呆道法术器系列】之【术】：【回溯周期，判断周期，换仓周期】 【中性offset的非等权开仓的实盘实现】_13080.pdf
+downloaded_pdfs/【保温杯内存分析】解析为什么2号脚本吃内存？_37611.pdf
+downloaded_pdfs/【保温杯加热器】一个万金油配置让你的保温杯年化多三成_34850.pdf
+downloaded_pdfs/【保温杯复盘】你真的了解你的策略吗？_42508.pdf
+downloaded_pdfs/【信号共享】MACD顶底背驰信号_20933_副本.pdf
+downloaded_pdfs/【全自动量化交易系统】自用风控组件—U本位仓位动态对冲组件_v1（附代码，开袋即食）_19044.pdf
+downloaded_pdfs/【因子组合检测】选股框架下快速检测2个因子组合策略表现的方案_33939.pdf
+downloaded_pdfs/【天行者-知识图谱3】创建股票知识图谱_27651.pdf
+downloaded_pdfs/【学习笔记】了解量子机器学习‎_16533.pdf
+downloaded_pdfs/【学习笔记】芝加哥量子—《使用经典和量子算法优化 60 只股票的投资组合》_16703.pdf
+downloaded_pdfs/【小白因子“观”】因子他丫的到底在干嘛？——通过TradingView可视化因子学习（V3因子及波动因子下篇）_41723.pdf
+downloaded_pdfs/【小白攻略】保温杯三期v1.6.1版攻略——回测环境设置篇_31731.pdf
+downloaded_pdfs/【工具向】如何用你的手机远程操控你的服务器——JuiceSSH_37261.pdf
+downloaded_pdfs/【皮尔逊策略思路拓展】——基于因子的选股范围判定【原理篇】_17077.pdf
+downloaded_pdfs/【自研因子】主力控盘能力因子_28158.pdf
+downloaded_pdfs/【花式网格】跑出195%收益25%回撤后，实盘2周的经验和思考_10174.pdf
+downloaded_pdfs/【读书笔记】多因子模型原理（一）-Jumbo帖5_34295.pdf
+downloaded_pdfs/【走进中性策略】分散持仓的一种实现方式_12596.pdf
+downloaded_pdfs/【辉hoi】【量化笔记003】工欲善其事必先利其器，打磨自己的因子分析工具_29284.pdf
+downloaded_pdfs/【选股策略框架】多策略同名因子冲突最简单的解决方案---4处修改实现每个策略保存自己的数据_22746.pdf
+downloaded_pdfs/万全之策，一个坑都没踩的超顺利香港银行开户分享_33260.pdf
+downloaded_pdfs/不错的定投思路-以PE计算定投系数加速建仓（沪深300etf）_4488.pdf
+downloaded_pdfs/两分钟了解资金曲线择时_7425.pdf
+downloaded_pdfs/中性回测用处理完成的数据下载_300个因子_时间更新至2022.10.04_16200.pdf
+downloaded_pdfs/中性因子逆向--纳牛马投名状_36119.pdf
+downloaded_pdfs/中性多策略轮动-基于中性四期船队框架的选股策略轮动移植_11515.pdf
+downloaded_pdfs/中性框架下使用非均分仓位下多币种单的思路及实现_8554.pdf
+downloaded_pdfs/中性策略实盘复盘与回测曲线比较【2023.02.15_2023.03.20】_21391.pdf
+downloaded_pdfs/中性系列之过拟合测试_27503.pdf
+downloaded_pdfs/中证500股指期货跨期套利（二）--回测_5959.pdf
+downloaded_pdfs/事件策略系列(二) 固定比例止盈止损_9168.pdf
+downloaded_pdfs/事件船队代码优化_10278.pdf
+downloaded_pdfs/事件驱动魔改：支持同周期内开仓平仓_8781.pdf
+downloaded_pdfs/低成本Metamask Swap撸代币空投，不止是以太坊链_7354.pdf
+downloaded_pdfs/你可能并不需要一个K线共享中心, 用自己的行情服务器吧~_34814.pdf
+downloaded_pdfs/使用机构调研数据优化筹码分布选股池来构建事件策略的探究_25408.pdf
+downloaded_pdfs/保温杯学习笔记19：从分组测试的角度，探索策略收益回撤比 与 选币数量之间的关系_26971.pdf
+downloaded_pdfs/做多和做空网格回测框架_14483.pdf
+downloaded_pdfs/关于伽俐略选股策略的优化_618.pdf
+downloaded_pdfs/关于杠杆的思考和量化（上）- 杠杆的基本算法和币本位杠杆_8902.pdf
+downloaded_pdfs/出来混迟早要还的：基于相对价格的超跌反弹选股策略_8896.pdf
+downloaded_pdfs/分享一个基于 ATR 布林带的动态网格策略_8673.pdf
+downloaded_pdfs/分享一个基于可转债双低策略的轮动事件模型 52.27% _ -17.77% _ 2.94_11125.pdf
+downloaded_pdfs/分享多bi种多周期 LLT指标-低延迟趋势线计算python程序以及与ma绘图直观比较_16560.pdf
+downloaded_pdfs/分享遗传算法在可转债轮动策略的应用，附回测代码_10850.pdf
+downloaded_pdfs/初试Numba加速筹码成本计算，速度提高20倍！！！_29340.pdf
+downloaded_pdfs/利用ngrok反向代理访问回测服务器结果_36350.pdf
+downloaded_pdfs/到底是什么系列之27”股指期货实盘策略迭代(附TB、Python代码)_9294.pdf
+downloaded_pdfs/券商网格浅析_3156.pdf
+downloaded_pdfs/北向资金行业选择配合选股策略_2325.pdf
+downloaded_pdfs/可视化资金曲线结果及选出的个股K线查看工具 - 分享会改版（基于飞翔老板框架）_2855.pdf
+downloaded_pdfs/可转债选债策略轮动框架_17520.pdf
+downloaded_pdfs/商品期货基础数据每日更新（含代码）_3325.pdf
+downloaded_pdfs/因子策略通用另类可视化工具：截面因子时序分布_19860.pdf
+downloaded_pdfs/均线回抽的超跌反弹事件策略_8678.pdf
+downloaded_pdfs/垃圾币的寻找思路及实践_8722.pdf
+downloaded_pdfs/【因子组合检测】选股框架下快速检测2个因子组合策略表现的方案_33939.pdf
+downloaded_pdfs/【天行者-知识图谱3】创建股票知识图谱_27651.pdf
+downloaded_pdfs/【学习笔记】了解量子机器学习‎_16533.pdf
+downloaded_pdfs/【学习笔记】芝加哥量子—《使用经典和量子算法优化 60 只股票的投资组合》_16703.pdf
+downloaded_pdfs/【小白因子“观”】因子他丫的到底在干嘛？——通过TradingView可视化因子学习（V3因子及波动因子下篇）_41723.pdf
+downloaded_pdfs/【小白攻略】保温杯三期v1.6.1版攻略——回测环境设置篇_31731.pdf
+downloaded_pdfs/【工具向】如何用你的手机远程操控你的服务器——JuiceSSH_37261.pdf
+downloaded_pdfs/【皮尔逊策略思路拓展】——基于因子的选股范围判定【原理篇】_17077.pdf
+downloaded_pdfs/【自研因子】主力控盘能力因子_28158.pdf
+downloaded_pdfs/【花式网格】跑出195%收益25%回撤后，实盘2周的经验和思考_10174.pdf
+downloaded_pdfs/【读书笔记】多因子模型原理（一）-Jumbo帖5_34295.pdf
+downloaded_pdfs/【走进中性策略】分散持仓的一种实现方式_12596.pdf
+downloaded_pdfs/【辉hoi】【量化笔记003】工欲善其事必先利其器，打磨自己的因子分析工具_29284.pdf
+downloaded_pdfs/【选股策略框架】多策略同名因子冲突最简单的解决方案---4处修改实现每个策略保存自己的数据_22746.pdf
+downloaded_pdfs/万全之策，一个坑都没踩的超顺利香港银行开户分享_33260.pdf
+downloaded_pdfs/不错的定投思路-以PE计算定投系数加速建仓（沪深300etf）_4488.pdf
+downloaded_pdfs/两分钟了解资金曲线择时_7425.pdf
+downloaded_pdfs/中性回测用处理完成的数据下载_300个因子_时间更新至2022.10.04_16200.pdf
+downloaded_pdfs/中性因子逆向--纳牛马投名状_36119.pdf
+downloaded_pdfs/中性多策略轮动-基于中性四期船队框架的选股策略轮动移植_11515.pdf
+downloaded_pdfs/中性框架下使用非均分仓位下多币种单的思路及实现_8554.pdf
+downloaded_pdfs/中性策略实盘复盘与回测曲线比较【2023.02.15_2023.03.20】_21391.pdf
+downloaded_pdfs/中性系列之过拟合测试_27503.pdf
+downloaded_pdfs/中证500股指期货跨期套利（二）--回测_5959.pdf
+downloaded_pdfs/事件策略系列(二) 固定比例止盈止损_9168.pdf
+downloaded_pdfs/事件船队代码优化_10278.pdf
+downloaded_pdfs/事件驱动魔改：支持同周期内开仓平仓_8781.pdf
+downloaded_pdfs/低成本Metamask Swap撸代币空投，不止是以太坊链_7354.pdf
+downloaded_pdfs/你可能并不需要一个K线共享中心, 用自己的行情服务器吧~_34814.pdf
+downloaded_pdfs/使用机构调研数据优化筹码分布选股池来构建事件策略的探究_25408.pdf
+downloaded_pdfs/保温杯学习笔记19：从分组测试的角度，探索策略收益回撤比 与 选币数量之间的关系_26971.pdf
+downloaded_pdfs/做多和做空网格回测框架_14483.pdf
+downloaded_pdfs/关于伽俐略选股策略的优化_618.pdf
+downloaded_pdfs/关于杠杆的思考和量化（上）- 杠杆的基本算法和币本位杠杆_8902.pdf
+downloaded_pdfs/出来混迟早要还的：基于相对价格的超跌反弹选股策略_8896.pdf
+downloaded_pdfs/分享一个基于 ATR 布林带的动态网格策略_8673.pdf
+downloaded_pdfs/分享一个基于可转债双低策略的轮动事件模型 52.27% _ -17.77% _ 2.94_11125.pdf
+downloaded_pdfs/分享多bi种多周期 LLT指标-低延迟趋势线计算python程序以及与ma绘图直观比较_16560.pdf
+downloaded_pdfs/分享遗传算法在可转债轮动策略的应用，附回测代码_10850.pdf
+downloaded_pdfs/初试Numba加速筹码成本计算，速度提高20倍！！！_29340.pdf
+downloaded_pdfs/利用ngrok反向代理访问回测服务器结果_36350.pdf
+downloaded_pdfs/到底是什么系列之27”股指期货实盘策略迭代(附TB、Python代码)_9294.pdf
+downloaded_pdfs/券商网格浅析_3156.pdf
+downloaded_pdfs/北向资金行业选择配合选股策略_2325.pdf
+downloaded_pdfs/可视化资金曲线结果及选出的个股K线查看工具 - 分享会改版（基于飞翔老板框架）_2855.pdf
+downloaded_pdfs/可转债选债策略轮动框架_17520.pdf
+downloaded_pdfs/商品期货基础数据每日更新（含代码）_3325.pdf
+downloaded_pdfs/因子策略通用另类可视化工具：截面因子时序分布_19860.pdf
+downloaded_pdfs/均线回抽的超跌反弹事件策略_8678.pdf
+downloaded_pdfs/垃圾币的寻找思路及实践_8722.pdf

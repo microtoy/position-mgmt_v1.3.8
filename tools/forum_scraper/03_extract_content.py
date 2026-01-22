@@ -6,6 +6,7 @@ import json
 import random
 import time
 import re
+import requests
 from playwright.async_api import async_playwright
 from util_stealth import apply_stealth, random_sleep, human_scroll, get_random_ua
 
@@ -20,9 +21,9 @@ PROFILE_DIR = "browser_profile"
 FIXED_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 # --- Safety Settings ---
-DAILY_LIMIT = 240  # 保守上限，防止触发256封控
-NIGHT_START = 23.8   # 夜间休息开始时间
-NIGHT_END = 7      # 夜间休息结束时间
+DAILY_LIMIT = 200  # 保守上限，每天200篇
+NIGHT_START = 23    # 夜间休息开始时间（23点）
+NIGHT_END = 7       # 夜间休息结束时间
 DAILY_COUNT_FILE = "daily_count.json"  # 记录每日访问量
 
 # 时段配置：模拟人类学习节奏
@@ -31,10 +32,10 @@ DAILY_COUNT_FILE = "daily_count.json"  # 记录每日访问量
 # 下午(14-18): 活跃学习
 # 晚间(18-23): 轻度学习，间隔长
 TIME_SLOTS = {
-    "morning": {"hours": range(7, 12), "min_sleep": 25, "max_sleep": 60},
-    "lunch": {"hours": range(12, 14), "min_sleep": 300, "max_sleep": 600},  # 午休，基本暂停
-    "afternoon": {"hours": range(14, 18), "min_sleep": 30, "max_sleep": 70},
-    "evening": {"hours": range(18, 23), "min_sleep": 45, "max_sleep": 100},  # 晚间放慢
+    "morning": {"hours": range(7, 12), "min_sleep": 45, "max_sleep": 90},      # 早间：增加间隔
+    "lunch": {"hours": range(12, 14), "min_sleep": 300, "max_sleep": 600},     # 午休：基本暂停
+    "afternoon": {"hours": range(14, 18), "min_sleep": 50, "max_sleep": 100},  # 下午：增加间隔
+    "evening": {"hours": range(18, 23), "min_sleep": 70, "max_sleep": 150},    # 晚间：更慢
 }
 
 if not os.path.exists(OUTPUT_DIR):
@@ -51,6 +52,34 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+# --- WeCom Notification ---
+WECOM_WEBHOOK = config.get("wecom_webhook", "")
+WECOM_WEBHOOK_ERROR = config.get("wecom_webhook_error", "")
+
+def send_wecom_alert(title: str, content: str, is_error: bool = False):
+    """发送企业微信群通知，is_error=True 时使用错误专用 Webhook"""
+    webhook = WECOM_WEBHOOK_ERROR if is_error else WECOM_WEBHOOK
+    if not webhook:
+        logger.warning("未配置企业微信 Webhook，跳过通知")
+        return
+    
+    try:
+        # 成功用绿色勾，失败用红色警告
+        icon = "⚠️" if is_error else "✅"
+        payload = {
+            "msgtype": "markdown",
+            "markdown": {
+                "content": f"### {icon} {title}\n{content}"
+            }
+        }
+        resp = requests.post(webhook, json=payload, timeout=10)
+        if resp.status_code == 200:
+            logger.info("✅ 企业微信通知发送成功")
+        else:
+            logger.warning(f"企业微信通知发送失败: {resp.text}")
+    except Exception as e:
+        logger.error(f"企业微信通知异常: {e}")
 
 # --- Progress Management ---
 def load_progress():
@@ -75,16 +104,32 @@ async def get_clean_title(page):
         t = t.replace("- 量化小论坛", "").strip()
         t = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', t)
         
-        # 2. Check DOM h1 if title looks generic
-        if not t or any(kw in t for kw in ["主题详情页", "量化小论坛", "Loading", "正在加载"]):
+        # 2. Check DOM for title if document.title looks generic
+        if not t or any(kw in t for kw in ["主题详情页", "量化小论坛", "Loading", "正在加载", "最新回复"]):
             try:
-                # Try fetching h1 or specific title classes
+                # 尝试多种选择器获取真实标题
                 dom_title = await page.evaluate("""() => {
-                    const h1 = document.querySelector('h1');
-                    if (h1 && h1.textContent.length > 2) return h1.textContent;
-                    
-                    const titleEl = document.querySelector('.thread-title') || document.querySelector('.title');
-                    if (titleEl && titleEl.textContent.length > 2) return titleEl.textContent;
+                    // 按优先级尝试多个选择器
+                    const selectors = [
+                        '.thread-title',
+                        '.article-title', 
+                        '.post-title',
+                        '.topic-title',
+                        'h1.title',
+                        'h1',
+                        '.content-header h1',
+                        '.main-content h1'
+                    ];
+                    for (const sel of selectors) {
+                        const el = document.querySelector(sel);
+                        if (el && el.textContent.trim().length > 2) {
+                            const text = el.textContent.trim();
+                            // 排除通用标题
+                            if (!text.includes('主题详情页') && !text.includes('最新回复')) {
+                                return text;
+                            }
+                        }
+                    }
                     return "";
                 }""")
                 if dom_title:
@@ -92,8 +137,9 @@ async def get_clean_title(page):
             except:
                 pass
 
-        # 3. Validation
-        if t and all(kw not in t for kw in ["主题详情页", "量化小论坛", "Loading", "正在加载"]):
+        # 3. Validation - 排除更多通用标题
+        generic_titles = ["主题详情页", "量化小论坛", "Loading", "正在加载", "最新回复", "首页"]
+        if t and all(kw not in t for kw in generic_titles):
             if len(t) > 2:
                 logger.info(f"  -> Found clean title: {t}")
                 return t
@@ -101,15 +147,25 @@ async def get_clean_title(page):
         if i % 2 == 0: logger.info(f"  -> Waiting for title... (Current: {t})")
         await asyncio.sleep(1)
     
-    # Fallback to whatever we have, but try DOM one last time
+    # Fallback: 尝试从页面内容提取标题
     final_t = await page.title()
     final_t = final_t.replace("- 量化小论坛", "").strip()
-    if "主题详情页" in final_t:
-         try:
-            dom_title = await page.evaluate("() => document.querySelector('h1') ? document.querySelector('h1').textContent : ''")
-            if dom_title: return dom_title.strip()
-         except:
-             pass
+    
+    # 最后尝试：从文章内容的第一行提取
+    try:
+        first_line = await page.evaluate("""() => {
+            const article = document.querySelector('.article-cont') || document.querySelector('.vditor-reset');
+            if (article) {
+                const firstP = article.querySelector('p, h1, h2, h3');
+                if (firstP) return firstP.textContent.trim().substring(0, 50);
+            }
+            return "";
+        }""")
+        if first_line and len(first_line) > 5:
+            return first_line
+    except:
+        pass
+    
     return final_t
 
 async def process_content():
@@ -382,18 +438,49 @@ async def process_content():
                 await page.evaluate("window.scrollTo(0, 0)")
                 title = await get_clean_title(page)
                 
-                # --- AUTO-STOP PROTECTION (User Request) ---
-                if "主题详情页" in title:
-                    # Save a debug screenshot before waiting
-                    debug_screenshot_path = f"error_antibot_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
-                    await page.screenshot(path=debug_screenshot_path, full_page=True)
-                    logger.warning(f"⚠️ [Anti-bot] Detected (Title='{title}'). Screenshot saved: {debug_screenshot_path}")
-                    logger.warning(f"⚠️ [Anti-bot] Waiting 10 minutes before retrying...")
-                    # Re-queue current item to ensure it gets retry later
-                    work_queue.insert(0, (url, is_index_hint))
-                    save_progress(list(processed_urls), work_queue)
-                    await asyncio.sleep(600)  # Wait 10 minutes
-                    continue  # Then continue with queue
+                # --- AUTO-STOP PROTECTION (改进版) ---
+                # 只有当标题和内容都不正常时才判定为 antibot
+                is_title_generic = "主题详情页" in title or title == ""
+                
+                if is_title_generic:
+                    # 先检查页面内容是否已经加载（通过文章区域是否有实质内容）
+                    content_check = await page.evaluate("""() => {
+                        const article = document.querySelector('.article-cont') || 
+                                        document.querySelector('.vditor-reset') || 
+                                        document.querySelector('.thread-cont');
+                        if (article && article.innerText.trim().length > 100) {
+                            return { hasContent: true, length: article.innerText.length };
+                        }
+                        return { hasContent: false, length: 0 };
+                    }""")
+                    
+                    if content_check.get("hasContent"):
+                        # 内容已加载，只是标题获取失败，使用 thread_id 作为标题
+                        logger.info(f"  -> 标题获取失败，但内容已加载 ({content_check.get('length')} chars)，继续处理...")
+                        title = f"Thread_{url.split('/')[-1].split('?')[0]}"
+                    else:
+                        # 标题和内容都没有，真正的 antibot
+                        debug_screenshot_path = f"error_antibot_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                        await page.screenshot(path=debug_screenshot_path, full_page=True)
+                        logger.warning(f"⚠️ [Anti-bot] Detected (Title='{title}'). Screenshot saved: {debug_screenshot_path}")
+                        logger.warning(f"⚠️ [Anti-bot] Waiting 10 minutes before retrying...")
+                        
+                        # 发送企业微信告警（使用错误专用 Webhook）
+                        send_wecom_alert(
+                            "论坛爬虫 Anti-bot 告警",
+                            f"> **检测时间**: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                            f"> **问题URL**: {url}\n"
+                            f"> **当前标题**: {title}\n"
+                            f"> **队列剩余**: {len(work_queue)} 篇\n\n"
+                            f"程序将等待 10 分钟后自动重试...",
+                            is_error=True
+                        )
+                        
+                        # Re-queue current item to ensure it gets retry later
+                        work_queue.insert(0, (url, is_index_hint))
+                        save_progress(list(processed_urls), work_queue)
+                        await asyncio.sleep(600)  # Wait 10 minutes
+                        continue  # Then continue with queue
                 # -------------------------------------------
 
                 safe_title = re.sub(r'[\\/*?:"<>|]', "", title).strip()
@@ -423,25 +510,61 @@ async def process_content():
                     logger.warning(f"  -> [SKIP] VIP/权限帖，跳过此帖。")
                     processed_urls.add(url)
                     save_progress(list(processed_urls), work_queue)
+                    # 发送 skip 通知
+                    send_wecom_alert(
+                        "⚠️ 跳过 VIP/权限帖",
+                        f"> **时间**: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                        f"> **URL**: {url}\n"
+                        f"> 进度: {len(processed_urls)}/{len(processed_urls)+len(work_queue)}",
+                        is_error=True
+                    )
                     await random_sleep(5, 10)
                     continue
                 elif content_status != "OK":
                     logger.warning("  -> Content seems empty. Skipping.")
+                    # 发送内容为空通知
+                    send_wecom_alert(
+                        "⚠️ 内容为空",
+                        f"> **时间**: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                        f"> **URL**: {url}\n"
+                        f"> 已重新加入队列等待重试",
+                        is_error=True
+                    )
                     consecutive_failures += 1
                     work_queue.append((url, is_index_hint))
                     await asyncio.sleep(30)
                     continue
 
-                # 7. 滚动回顶部再打印 PDF（避免顶部内容被截断）
+                # 7. 模拟阅读时间（根据内容长度计算，更加隐蔽）
+                content_length = await page.evaluate("""() => {
+                    const article = document.querySelector('.article-cont') || 
+                                    document.querySelector('.vditor-reset') || 
+                                    document.querySelector('.thread-cont');
+                    return article ? article.innerText.length : 500;
+                }""")
+                # 假设阅读速度 300-500 字/分钟，计算阅读时间（秒）
+                # 最少15秒，最多120秒
+                base_read_time = max(15, min(120, content_length / 400 * 60))
+                read_time = int(base_read_time * random.uniform(0.8, 1.3))  # 加入随机波动
+                logger.info(f"  -> 模拟阅读 {read_time} 秒 (内容 {content_length} 字)...")
+                
+                # 阅读时模拟缓慢滚动
+                scroll_steps = random.randint(3, 6)
+                for _ in range(scroll_steps):
+                    await asyncio.sleep(read_time / scroll_steps)
+                    scroll_amount = random.randint(200, 600)
+                    await page.evaluate(f"window.scrollBy(0, {scroll_amount})")
+                
+                # 8. 阅读完毕，回到顶部准备打印 PDF
                 await page.evaluate("window.scrollTo(0, 0)")
                 await asyncio.sleep(1)
                 
-                # 8. 获取页面总高度以实现“无分页”长图 PDF
+                # 9. 获取页面总高度以实现“无分页”长图 PDF
                 height = await page.evaluate("() => document.documentElement.scrollHeight")
                 # 增加一点缓冲高度
                 pdf_height = height + 50
                 
-                # 9. Print to PDF (Long Page, No Pagination)
+                # 10. Print to PDF (Long Page, No Pagination)
                 logger.info(f"  -> Printing Long PDF ({height}px): {pdf_filename}")
                 await page.pdf(
                     path=filepath,
@@ -454,6 +577,15 @@ async def process_content():
                 logger.info(f"  -> Success!")
                 processed_urls.add(url)
                 consecutive_failures = 0
+                
+                # 发送成功通知到企业微信（带时间戳）
+                send_wecom_alert(
+                    "✅ 爬取成功",
+                    f"> **{safe_title}**\n"
+                    f"> {url}\n"
+                    f"> 时间: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                    f"> 进度: {len(processed_urls)}/{len(processed_urls)+len(work_queue)} | 剩余: {len(work_queue)}"
+                )
 
                 # 10. Save Progress (EVERY TIME for safety)
                 save_progress(list(processed_urls), work_queue)
