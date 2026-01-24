@@ -110,6 +110,7 @@
     "https://bbs.quantclass.cn/thread/18825",
     "https://bbs.quantclass.cn/thread/31922",
     "https://bbs.quantclass.cn/thread/25151",
+    "https://bbs.quantclass.cn/thread/11373",
     "https://bbs.quantclass.cn/thread/24566",
     "https://bbs.quantclass.cn/thread/16840",
     "https://bbs.quantclass.cn/thread/23151",
@@ -317,14 +318,6 @@
     "https://bbs.quantclass.cn/thread/19545"
   ],
   "queue": [
-    [
-      "https://bbs.quantclass.cn/thread/11373",
-      false
-    ],
-    [
-      "https://bbs.quantclass.cn/thread/16985",
-      false
-    ],
     [
       "https://bbs.quantclass.cn/thread/14259",
       false
@@ -15587,6 +15580,10 @@
     ],
     [
       "https://bbs.quantclass.cn/thread/38961",
+      false
+    ],
+    [
+      "https://bbs.quantclass.cn/thread/16985",
       false
     ]
   ]

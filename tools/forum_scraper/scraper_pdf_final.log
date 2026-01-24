@@ -4109,3 +4109,29 @@ Call log:
 2026-01-24 21:09:41,178 - INFO -   -> Scrolling to trigger lazy loads...
 2026-01-24 21:09:45,197 - INFO -   -> Found clean title: 【股票】筹码集中度和获利比例计算代码
 2026-01-24 21:09:45,201 - INFO -   -> 模拟阅读 144 秒 (内容 5482 字)...
+2026-01-24 21:12:10,234 - INFO -   -> Printing Long PDF (8274px): 【股票】筹码集中度和获利比例计算代码_11373.pdf
+2026-01-24 21:12:11,811 - INFO -   -> Success!
+2026-01-24 21:12:12,576 - INFO - ✅ 企业微信通知发送成功
+2026-01-24 21:12:12,584 - INFO -   -> [Safety] 时段:evening 休息 81 秒...
+2026-01-24 21:13:33,587 - INFO - [317 / Q:3816] Processing: https://bbs.quantclass.cn/thread/16985
+2026-01-24 21:13:44,145 - WARNING -   -> Nav warning: Page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://bbs.quantclass.cn/thread/16985
+Call log:
+  - navigating to "https://bbs.quantclass.cn/thread/16985", waiting until "domcontentloaded"
+
+2026-01-24 21:13:44,216 - ERROR - Error processing https://bbs.quantclass.cn/thread/16985: Page.add_style_tag: Execution context was destroyed, most likely because of a navigation
+2026-01-24 21:14:14,219 - INFO - [317 / Q:3816] Processing: https://bbs.quantclass.cn/thread/14259
+2026-01-24 21:14:18,726 - INFO -   -> Waiting for hydration...
+2026-01-24 21:14:28,728 - INFO -   -> Scrolling to trigger lazy loads...
+2026-01-24 21:14:32,742 - INFO -   -> Waiting for title... (Current: 主题详情页‎)
+2026-01-24 21:14:34,752 - INFO -   -> Waiting for title... (Current: 主题详情页‎)
+2026-01-24 21:14:36,773 - INFO -   -> Waiting for title... (Current: 主题详情页‎)
+2026-01-24 21:14:38,791 - INFO -   -> Waiting for title... (Current: 主题详情页‎)
+2026-01-24 21:14:40,798 - INFO -   -> Waiting for title... (Current: 主题详情页‎)
+2026-01-24 21:14:42,806 - INFO -   -> Waiting for title... (Current: 主题详情页‎)
+2026-01-24 21:14:44,817 - INFO -   -> Waiting for title... (Current: 主题详情页‎)
+2026-01-24 21:14:46,828 - INFO -   -> Waiting for title... (Current: 主题详情页‎)
+2026-01-24 21:14:48,835 - INFO -   -> Waiting for title... (Current: 主题详情页‎)
+2026-01-24 21:14:50,845 - INFO -   -> Waiting for title... (Current: 主题详情页‎)
+2026-01-24 21:14:52,936 - WARNING - ⚠️ [Anti-bot] Detected (Title='主题详情页‎'). Screenshot saved: error_antibot_20260124_211452.png
+2026-01-24 21:14:52,937 - WARNING - ⚠️ [Anti-bot] Waiting 10 minutes before retrying...
+2026-01-24 21:14:53,871 - INFO - ✅ 企业微信通知发送成功
