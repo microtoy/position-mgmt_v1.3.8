@@ -337,8 +337,48 @@ async def process_content():
                 # 1. Navigation
                 try:
                     await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+                    # [Pre-check] 在注入 CSS 隐藏 Header 之前检测登录状态
+                    login_state = "UNCERTAIN"
+                    for _ in range(3):
+                        await asyncio.sleep(2)
+                        login_state = await page.evaluate("""() => {
+                            const bodyText = document.body.innerText;
+                            
+                            // 1. 检查风险控制/验证码 (Anti-bot)
+                            const antibot_keywords = ["验证码", "安全验证", "完成拼图", "点击机器人", "验证您是机器人", "验证过快", "访问过于频繁", "Risk Control"];
+                            for (const k of antibot_keywords) {
+                                if (bodyText.includes(k)) return "ANTIBOT";
+                            }
+                            if (!!document.querySelector('iframe[src*="captcha"]') || !!document.querySelector('.geetest_window') || !!document.querySelector('#captcha-container')) {
+                                return "ANTIBOT";
+                            }
+
+                            // 2. 检查登录特征
+                            const has_logout = bodyText.includes('退出') || bodyText.includes('个人中心') || bodyText.includes('我的帖子');
+                            const has_avatar = !!document.querySelector('.avatar') || !!document.querySelector('.user-name') || !!document.querySelector('.header-user');
+                            
+                            // 3. 检查未登录特征
+                            const has_login_btn = (bodyText.includes('登录') && bodyText.includes('注册')) || bodyText.includes('扫码登录');
+                            const has_login_link = !!document.querySelector('a[href*="login"]') || !!document.querySelector('.login-btn');
+                            
+                            if (has_logout || has_avatar) return "LOGGED_IN";
+                            if (has_login_btn || has_login_link) return "LOGGED_OUT";
+                            return "UNCERTAIN";
+                        }""")
+                        if login_state in ["LOGGED_IN", "LOGGED_OUT", "ANTIBOT"]: break
+                    
+                    logger.info(f"  -> Session security check: {login_state}")
+                    
+                    # 风险控制拦截：立即停止
+                    if login_state == "ANTIBOT":
+                        logger.error(f"  -> [CRITICAL] 触发风险控制/验证码拦截！")
+                        send_wecom_alert("🚨 触发风险控制", f"> **URL**: {url}\n> **状态**: 检测到验证码或封控提示，程序已紧急停止。", is_error=True)
+                        work_queue.insert(0, (url, is_index_hint))
+                        save_progress(list(processed_urls), work_queue)
+                        break
                 except Exception as e:
                     logger.warning(f"  -> Nav warning: {e}")
+                    login_check = None
 
                 # 2. CSS Cleanup & Table Fixes
                 await page.add_style_tag(content="""
@@ -554,63 +594,53 @@ async def process_content():
                     const article = document.querySelector('.article-cont') || document.querySelector('.vditor-reset') || document.querySelector('.thread-cont');
                     const text = article ? article.innerText : "";
                     
-                    // 改进后的登录检测：检查“退出”文字
-                    const bodyText = document.body.innerText;
-                    const is_logged_in = bodyText.includes('退出') || 
-                                         bodyText.includes('个人中心') || 
-                                         !!document.querySelector('.avatar');
-                    
                     if (text.includes("剩余内容已隐藏") || text.includes("报名课程即可查看完整内容")) {
-                        return { status: "HIDDEN", is_logged_in: is_logged_in };
+                        return { status: "HIDDEN" };
                     }
                     if (!article || article.innerText.trim().length < 50) {
-                        return { status: "EMPTY", is_logged_in: is_logged_in };
+                        return { status: "EMPTY" };
                     }
-                    return { status: "OK", is_logged_in: is_logged_in };
+                    return { status: "OK" };
                 }""")
                 
                 content_status = check_result.get("status")
-                is_logged_in = check_result.get("is_logged_in", False)
                 
                 if content_status == "HIDDEN":
-                    if not is_logged_in:
-                        # 核心改动：如果未登录看到隐藏，认为是会话失效，而不是真的VIP
-                        logger.error(f"  -> [CRITICAL] 会话失效！检测到未登录且内容被隐藏。")
-                        
-                        # 保存故障快照
-                        debug_dir = "temp_screenshots"
-                        if not os.path.exists(debug_dir): os.makedirs(debug_dir)
-                        fail_screenshot = os.path.join(debug_dir, f"session_fail_{datetime.datetime.now().strftime('%H%M%S')}.png")
-                        await page.screenshot(path=fail_screenshot, full_page=True)
-                        logger.info(f"  -> 已保存会话失效截图: {fail_screenshot}")
-
-                        send_wecom_alert(
-                            "🚨 爬虫会话失效",
-                            f"> **检测时间**: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-                            f"> **URL**: {url}\n"
-                            f"> **显示文本**: {check_result.get('status')}\n"
-                            f"> **状态**: 检测到未登录，请重新运行 verify_and_refresh.py\n"
-                            f"> **截图**: {fail_screenshot}",
-                            is_error=True
-                        )
-                        # 将当前任务放回队列并停止
-                        work_queue.insert(0, (url, is_index_hint))
+                    # 只有当确定已登录 (LOGGED_IN) 时，才认为是 VIP 贴并跳过
+                    if login_state == "LOGGED_IN":
+                        logger.warning(f"  -> [SKIP] 确认已登录，内容隐藏，判定为 VIP/权限帖。")
+                        processed_urls.add(url)
                         save_progress(list(processed_urls), work_queue)
-                        break # 中断循环，等待用户干预
+                        send_wecom_alert(
+                            "⚠️ 跳过 VIP/权限帖",
+                            f"> **URL**: {url}\n> **判定**: 确认已登录但内容受限\n> 进度: {len(processed_urls)}/{len(processed_urls)+len(work_queue)}",
+                            is_error=False
+                        )
+                        await random_sleep(5, 10)
+                        continue
                     
-                    logger.warning(f"  -> [SKIP] VIP/权限帖，跳过此帖。")
-                    processed_urls.add(url)
-                    save_progress(list(processed_urls), work_queue)
-                    # 发送 skip 通知
+                    # 否则（不管是 LOGGED_OUT 还是 UNCERTAIN），都触发停止逻辑
+                    error_msg = "检测到注销状态" if login_state == "LOGGED_OUT" else "无法确认登录状态（UNCERTAIN）"
+                    logger.error(f"  -> [CRITICAL] {error_msg} 且内容被隐藏，安全起见停止运行。")
+                    
+                    # 保存故障快照
+                    debug_dir = "temp_screenshots"
+                    if not os.path.exists(debug_dir): os.makedirs(debug_dir)
+                    fail_screenshot = os.path.join(debug_dir, f"session_stop_{datetime.datetime.now().strftime('%H%M%S')}.png")
+                    await page.screenshot(path=fail_screenshot, full_page=True)
+                    logger.info(f"  -> 已保存状态异常截图: {fail_screenshot}")
+
                     send_wecom_alert(
-                        "⚠️ 跳过 VIP/权限帖",
-                        f"> **时间**: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                        "🚨 爬虫运行停止",
                         f"> **URL**: {url}\n"
-                        f"> 进度: {len(processed_urls)}/{len(processed_urls)+len(work_queue)}",
+                        f"> **原因**: {error_msg}\n"
+                        f"> **截图**: {fail_screenshot}",
                         is_error=True
                     )
-                    await random_sleep(5, 10)
-                    continue
+                    # 将当前任务放回队列并停止
+                    work_queue.insert(0, (url, is_index_hint))
+                    save_progress(list(processed_urls), work_queue)
+                    break 
                 elif content_status != "OK":
                     logger.warning("  -> Content seems empty. Skipping.")
                     # 发送内容为空通知
