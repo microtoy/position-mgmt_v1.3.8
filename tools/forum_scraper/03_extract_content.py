@@ -16,15 +16,19 @@ with open("config.json", "r", encoding="utf-8") as f:
 
 LINKS_FILE = "links.json"
 PROGRESS_FILE = "progress.json"
+STATE_FILE = "state.json"
 OUTPUT_DIR = "downloaded_pdfs" 
 PROFILE_DIR = "browser_profile"
 FIXED_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 # --- Safety Settings ---
-DAILY_LIMIT = 200  # 保守上限，每天200篇
+DAILY_LIMIT_MIN = 50  # 每日最少 50 篇
+DAILY_LIMIT_MAX = 80  # 每日最多 80 篇
+HOURLY_LIMIT = 10     # 每小时最多 10 篇
 NIGHT_START = 23    # 夜间休息开始时间（23点）
 NIGHT_END = 7       # 夜间休息结束时间
 DAILY_COUNT_FILE = "daily_count.json"  # 记录每日访问量
+HOURLY_COUNT_FILE = "hourly_count.json" # 记录每小时访问量
 
 # 时段配置：模拟人类学习节奏
 # 早间(7-12): 活跃学习，间隔短
@@ -205,6 +209,36 @@ async def process_content():
         page = context.pages[0] if context.pages else await context.new_page()
         await apply_stealth(page)
 
+        # [Addition] Inject cookies AND LocalStorage from state.json
+        state_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), STATE_FILE)
+        if os.path.exists(state_path):
+            try:
+                with open(state_path, "r", encoding="utf-8") as f:
+                    state_storage = json.load(f)
+                    
+                    # 1. Inject Cookies
+                    if "cookies" in state_storage:
+                        await context.add_cookies(state_storage["cookies"])
+                        logger.info(f"  -> Injected {len(state_storage['cookies'])} cookies")
+                    
+                    # 2. Inject LocalStorage via Init Script (Deep Restoration)
+                    if "origins" in state_storage:
+                        for origin_data in state_storage["origins"]:
+                            origin = origin_data.get("origin")
+                            ls_items = origin_data.get("localStorage", [])
+                            if origin and ls_items:
+                                # Construct JS to set localStorage
+                                ls_script = "\n".join([
+                                    f"localStorage.setItem({json.dumps(item['name'])}, {json.dumps(item['value'])});"
+                                    for item in ls_items
+                                ])
+                                # Use add_init_script to ensure it runs before any page scripts
+                                await context.add_init_script(f"(function() {{ if (window.location.origin === '{origin}') {{ {ls_script} }} }})()")
+                        logger.info(f"  -> Registered LocalStorage injection for {len(state_storage['origins'])} origins")
+                            
+            except Exception as e:
+                logger.warning(f"  -> Failed to load state from {STATE_FILE}: {e}")
+
         logger.info(f"Starting crawl with {len(work_queue)} items in queue...")
 
         while work_queue:
@@ -221,20 +255,44 @@ async def process_content():
             now = datetime.datetime.now()
             current_hour = now.hour
             
-            # 1. 每日限额检查
+            # 1. 每日/每小时限额检查
             today_str = now.strftime("%Y-%m-%d")
+            this_hour_str = now.strftime("%Y-%m-%d %H")
+            
+            # 使用 random 种子（基于日期）生成今天的固定限额，增加拟人感
+            random.seed(today_str)
+            daily_limit_today = random.randint(DAILY_LIMIT_MIN, DAILY_LIMIT_MAX)
+            random.seed() # 重置种子
+            
             daily_data = {}
             if os.path.exists(DAILY_COUNT_FILE):
-                with open(DAILY_COUNT_FILE, "r") as f:
-                    daily_data = json.load(f)
+                try:
+                    with open(DAILY_COUNT_FILE, "r") as f: daily_data = json.load(f)
+                except: pass
             today_count = daily_data.get(today_str, 0)
             
-            if today_count >= DAILY_LIMIT:
-                logger.warning(f"📊 [Limit] 今日已访问 {today_count} 篇，达到上限 {DAILY_LIMIT}。")
+            hourly_data = {}
+            if os.path.exists(HOURLY_COUNT_FILE):
+                try:
+                    with open(HOURLY_COUNT_FILE, "r") as f: hourly_data = json.load(f)
+                except: pass
+            hour_count = hourly_data.get(this_hour_str, 0)
+            
+            # 检查每日上限
+            if today_count >= daily_limit_today:
+                logger.warning(f"📊 [Limit] 今日已访问 {today_count} 篇，达到今日动态上限 {daily_limit_today}。")
                 logger.warning(f"📊 等待至明天 07:00 重置...")
-                # 计算到明天7点的秒数
                 tomorrow_7am = (now + datetime.timedelta(days=1)).replace(hour=7, minute=0, second=0)
                 wait_seconds = (tomorrow_7am - now).total_seconds()
+                await asyncio.sleep(wait_seconds)
+                continue
+
+            # 检查每小时上限
+            if hour_count >= HOURLY_LIMIT:
+                logger.warning(f"⏳ [Hourly Limit] 本小时已访问 {hour_count} 篇，达到上限 {HOURLY_LIMIT}。")
+                next_hour = (now + datetime.timedelta(hours=1)).replace(minute=1, second=0)
+                wait_seconds = (next_hour - now).total_seconds()
+                logger.warning(f"⏳ 将在下个整点 ({next_hour.strftime('%H:%M')}) 恢复，等待 {int(wait_seconds/60)} 分钟...")
                 await asyncio.sleep(wait_seconds)
                 continue
             
@@ -496,17 +554,50 @@ async def process_content():
                     const article = document.querySelector('.article-cont') || document.querySelector('.vditor-reset') || document.querySelector('.thread-cont');
                     const text = article ? article.innerText : "";
                     
+                    // 改进后的登录检测：检查“退出”文字
+                    const bodyText = document.body.innerText;
+                    const is_logged_in = bodyText.includes('退出') || 
+                                         bodyText.includes('个人中心') || 
+                                         !!document.querySelector('.avatar');
+                    
                     if (text.includes("剩余内容已隐藏") || text.includes("报名课程即可查看完整内容")) {
-                        return { status: "HIDDEN" };
+                        return { status: "HIDDEN", is_logged_in: is_logged_in };
                     }
                     if (!article || article.innerText.trim().length < 50) {
-                        return { status: "EMPTY" };
+                        return { status: "EMPTY", is_logged_in: is_logged_in };
                     }
-                    return { status: "OK" };
+                    return { status: "OK", is_logged_in: is_logged_in };
                 }""")
                 
                 content_status = check_result.get("status")
+                is_logged_in = check_result.get("is_logged_in", False)
+                
                 if content_status == "HIDDEN":
+                    if not is_logged_in:
+                        # 核心改动：如果未登录看到隐藏，认为是会话失效，而不是真的VIP
+                        logger.error(f"  -> [CRITICAL] 会话失效！检测到未登录且内容被隐藏。")
+                        
+                        # 保存故障快照
+                        debug_dir = "temp_screenshots"
+                        if not os.path.exists(debug_dir): os.makedirs(debug_dir)
+                        fail_screenshot = os.path.join(debug_dir, f"session_fail_{datetime.datetime.now().strftime('%H%M%S')}.png")
+                        await page.screenshot(path=fail_screenshot, full_page=True)
+                        logger.info(f"  -> 已保存会话失效截图: {fail_screenshot}")
+
+                        send_wecom_alert(
+                            "🚨 爬虫会话失效",
+                            f"> **检测时间**: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                            f"> **URL**: {url}\n"
+                            f"> **显示文本**: {check_result.get('status')}\n"
+                            f"> **状态**: 检测到未登录，请重新运行 verify_and_refresh.py\n"
+                            f"> **截图**: {fail_screenshot}",
+                            is_error=True
+                        )
+                        # 将当前任务放回队列并停止
+                        work_queue.insert(0, (url, is_index_hint))
+                        save_progress(list(processed_urls), work_queue)
+                        break # 中断循环，等待用户干预
+                    
                     logger.warning(f"  -> [SKIP] VIP/权限帖，跳过此帖。")
                     processed_urls.add(url)
                     save_progress(list(processed_urls), work_queue)
@@ -590,10 +681,14 @@ async def process_content():
                 # 10. Save Progress (EVERY TIME for safety)
                 save_progress(list(processed_urls), work_queue)
                 
-                # 11. 更新每日计数器
+                # 11. 更新计数器
                 daily_data[today_str] = daily_data.get(today_str, 0) + 1
                 with open(DAILY_COUNT_FILE, "w") as f:
                     json.dump(daily_data, f)
+                
+                hourly_data[this_hour_str] = hourly_data.get(this_hour_str, 0) + 1
+                with open(HOURLY_COUNT_FILE, "w") as f:
+                    json.dump(hourly_data, f)
                 
                 # 10. 时段感知动态间隔
                 sleep_time = random.randint(min_sleep, max_sleep)
